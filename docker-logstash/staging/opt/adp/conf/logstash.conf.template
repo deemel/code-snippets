@@ -1,0 +1,105 @@
+input {
+  beats {
+    port => "${LOGSTASH_INPUT_BEATS_PORT:5045}"
+    type => filebeat
+  }
+
+  tcp {
+    port => "${LOGSTASH_INPUT_TCP_PORT_SYSLOG:5014}"
+    type => syslog
+    add_field => [ "logplane", "auditlogs" ]
+  }
+
+  tcp {
+    port => "${LOGSTASH_INPUT_TCP_PORT_REST:7170}"
+    codec => json_lines
+    type => rest
+  }
+
+  udp {
+    port => "${LOGSTASH_INPUT_UDP_PORT:5014}"
+    type => syslog
+    add_field => [ "logplane", "auditlogs" ]
+  }
+
+#  heartbeat {
+#    interval => 10
+#    type => "heartbeat"
+#  }
+
+# Custom Input Configuration
+}
+
+filter {
+
+  if [type] == "rest" {
+    mutate {
+      remove_field => ["port"]
+      remove_field => ["@version"]
+      remove_field => ["host"]
+      remove_field => ["type"]
+      rename => { "logPlane" => "logplane" }
+    }
+  }
+
+  if [type] == "syslog" {
+    grok {
+      break_on_match => true
+      match => [
+        "message", "<%{POSINT:syslog_pri}>%{SYSLOGTIMESTAMP:timestamp} %{SYSLOGHOST:syslog_source} %{PROG:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_msg}",
+        "message", "<%{POSINT:syslog_pri}>%{SYSLOGTIMESTAMP:timestamp} %{SYSLOGHOST:syslog_source}: %{GREEDYDATA:syslog_msg}",
+        "message", "<%{POSINT:syslog_pri}>%{TIMESTAMP_ISO8601:timestamp} %{SYSLOGHOST:syslog_source} %{PROG:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_msg}",
+        "message", "<%{POSINT:syslog_pri}>%{TIMESTAMP_ISO8601:timestamp} %{SYSLOGHOST:syslog_source}: %{GREEDYDATA:syslog_msg}",
+        "message", "<%{POSINT:syslog_pri}>%{SYSLOGTIMESTAMP:timestamp}.*$",
+        "message", "<%{POSINT:syslog_pri}>%{TIMESTAMP_ISO8601:timestamp}.*$",
+        "message", "<%{POSINT:syslog_pri}>.*$",
+        "message", "%{SYSLOGTIMESTAMP:timestamp} %{GREEDYDATA:syslog_msg}",
+        "message", "%{TIMESTAMP_ISO8601:timestamp} %{GREEDYDATA:syslog_msg}",
+        "message", ".*$"
+      ]
+      add_tag => [ "grokked-syslog" ]
+      tag_on_failure => [""]
+    }
+  }
+
+  # Get size of the log event
+  ruby {
+    code => "
+      begin
+        event.set('message_length', event.get('message').bytesize)
+      rescue Exception
+        event.set('message_length', 'parse_failure')
+      end
+    "
+  }
+
+  mutate {
+    remove_field => [ "beat" ]
+    remove_field => [ "fields" ]
+    add_field => { "[@metadata][LOGSTASH_OUTPUT_STDOUT_IS_ENABLED]" => "${LOGSTASH_OUTPUT_STDOUT_IS_ENABLED}" }
+  }
+
+  mutate {
+    strip => "message"
+  }
+
+# Custom Filter Configuration
+}
+
+output {
+#  if [type] == "heartbeat" {
+#    file {
+#      path => "/tmp/logstash/readiness.txt"
+#    }
+#  } else {
+
+  if [@metadata][LOGSTASH_OUTPUT_STDOUT_IS_ENABLED] == "true" {
+    stdout { codec => rubydebug }
+  }
+
+# Custom Output Configuration
+
+# ${ELASTICSEARCH} /opt/adp/conf/logstash.conf.output.elasticsearch.template
+
+#}
+}

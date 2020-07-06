@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.jupiter.pigs.filebeat</groupId>
+    <artifactId>top</artifactId>
+    <version>2.3.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>filebeat-docker</artifactId>
+  <packaging>pom</packaging>
+  <version>2.3.0-SNAPSHOT</version>
+
+  <dependencies>
+    <dependency>
+      <groupId>filebeat</groupId>
+      <artifactId>filebeat</artifactId>
+      <type>tar.gz</type>
+    </dependency>
+    <dependency>
+      <groupId>com.jupiter.pigs.filebeat</groupId>
+      <artifactId>filebeat-wrapper</artifactId>
+      <version>${project.version}</version>
+      <type>bin</type>
+    </dependency>
+   </dependencies>
+
+  <build>
+    <plugins>
+<!--
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>filter-res</id>
+            <phase>package</phase>
+            <goals>
+              <goal>resources</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+-->
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <stripVersion>true</stripVersion>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>chmod</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>chmod</executable>
+              <arguments>
+                <argument>u+x</argument>
+                <argument>target/lib/filebeat-wrapper.bin</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>create filebeat directory</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+            <!-- [BUG] Reason for longModulePath: https://github.com/mojohaus/exec-maven-plugin/issues/75 -->
+            <longModulepath>false</longModulepath>
+              <executable>mkdir</executable>
+              <arguments>
+                <argument>-p</argument>
+                <argument>target/lib/filebeat</argument>
+              </arguments>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>untar filebeat</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>tar</executable>
+              <arguments>
+                <argument>-xf</argument>
+                <argument>target/lib/filebeat.tar.gz</argument>
+                <argument>-C</argument>
+                <argument>target/lib/filebeat</argument>
+                <argument>--strip-components=1</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>com.spotify</groupId>
+        <artifactId>dockerfile-maven-plugin</artifactId>
+         <configuration>
+           <!--noCache>true</noCache-->
+           <pullNewerImage>false</pullNewerImage>
+           <repository>${docker.name.prefix}/${docker.name.filebeat}</repository>
+          <buildArgs>
+            <VERSION_RHEL7_ATOMIC>${version.rhel7-atomic}</VERSION_RHEL7_ATOMIC>
+            <FILEBEAT_VERSION>${version.filebeat}</FILEBEAT_VERSION>
+          </buildArgs>
+         </configuration>
+        <executions>
+          <execution>
+            <id>build-image</id>
+            <phase>package</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+             <configuration>
+               <tag>${project.version}</tag>
+             </configuration>
+          </execution>
+           <execution>
+             <id>build-image2</id>
+             <phase>package</phase>
+             <goals>
+               <goal>build</goal>
+             </goals>
+             <configuration>
+               <tag>latest</tag>
+             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

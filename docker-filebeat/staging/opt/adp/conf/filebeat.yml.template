@@ -1,0 +1,8 @@
+filebeat.prospectors:
+# FILEBEAT_PROSPECTORS_LOG
+
+output.logstash:
+  hosts: '${LOGSTASH_HOSTS}'
+
+logging.level: error
+logging.metrics.enabled: false

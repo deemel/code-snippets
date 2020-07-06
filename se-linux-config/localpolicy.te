@@ -1,0 +1,12 @@
+policy_module(localpolicy, 1.0)
+
+gen_require(`
+ type unconfined_java_t;
+ type initrc_exec_t;
+ type initrc_t;
+ type sshd_exec_t;
+ type sshd_t;
+')
+
+domain_auto_trans(unconfined_java_t, initrc_exec_t, initrc_t)
+domain_auto_trans(unconfined_java_t, sshd_exec_t, sshd_t)

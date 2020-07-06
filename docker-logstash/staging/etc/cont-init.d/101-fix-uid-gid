@@ -1,0 +1,18 @@
+#!/usr/bin/with-contenv /bin/bash
+
+source /opt/adp/bin/base-common.sh
+
+if [ $FILE_OUTPUT_UID != 1000 ] || [ $FILE_OUTPUT_GID != 1000 ]
+then
+  echo "Applying user-provided uid and gid"
+  usermod -u $FILE_OUTPUT_UID logstash
+  groupmod -g $FILE_OUTPUT_GID logstash
+  usermod --append --groups root logstash
+
+  find $LS_ROOT -user 1000 -exec chown -h $FILE_OUTPUT_UID {} \;
+  find $LS_ROOT -group 1000 -exec chgrp -h $FILE_OUTPUT_GID {} \;
+  find $LS_ROOT -group $FILE_OUTPUT_UID -exec chgrp -h $FILE_OUTPUT_GID {} \;
+fi
+
+exit 0
+

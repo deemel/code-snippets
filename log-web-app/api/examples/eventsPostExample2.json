@@ -1,0 +1,8 @@
+       { 
+          "events": [{
+              "message"  : "door open"
+            },
+            {
+            "message"  : "door closed",
+          }]
+      }

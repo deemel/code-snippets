@@ -1,0 +1,4 @@
+  elasticsearch {
+    hosts => [${ELASTICSEARCH_HOSTS}]
+    index => "%{logplane}-%{+YYYY.MM.dd}"
+  }

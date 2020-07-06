@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.jupiter.pigs.log</groupId>
+        <artifactId>top</artifactId>
+        <version>2.3.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>log-docker</artifactId>
+    <packaging>pom</packaging>
+
+    <properties>
+        <logstash.tar.gz>logstash.tar.gz</logstash.tar.gz>
+        <logstash.path>opt/logstash</logstash.path>
+        <gs-log-rest-server.tar.gz>gs-log-rest-server.tar.gz</gs-log-rest-server.tar.gz>
+        <gs-log-rest-server.path>.</gs-log-rest-server.path>
+        <logstash-custom-config.bin>logstash-custom-config.bin</logstash-custom-config.bin>
+        <logstash-custom-config.path>${logstash.path}/bin</logstash-custom-config.path>
+
+        <dir.dependency>target/dependency</dir.dependency>
+        <dir.target>${project.build.outputDirectory}/packages</dir.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>logstash</groupId>
+            <artifactId>logstash</artifactId>
+            <type>tar.gz</type>
+        </dependency>
+        <dependency>
+            <groupId>com.jupiter.pigs.log</groupId>
+            <artifactId>gs-log-rest-server</artifactId>
+            <version>${project.version}</version>
+            <type>tar.gz</type>
+        </dependency>
+        <dependency>
+            <groupId>com.jupiter.pigs.log</groupId>
+            <artifactId>logstash-custom-config</artifactId>
+            <version>${project.version}</version>
+            <type>bin</type>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>docker</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>filter-res</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>resources</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${dir.dependency}</outputDirectory>
+                            <stripVersion>true</stripVersion>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <!-- Create file system structure -->
+                    <execution>
+                        <id>creating file system</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <!-- [BUG] Reason for longModulePath: https://github.com/mojohaus/exec-maven-plugin/issues/75 -->
+                            <longModulepath>false</longModulepath>
+                            <executable>mkdir</executable>
+                            <arguments>
+                                <argument>-p</argument>
+                                <argument>${dir.target}/${logstash.path}</argument>
+                                <!-- NOTE: never create the directory bin/ as it would destroy
+                                    the already created symlink named bin/ from the Redhat
+                                    distro! The symlink points to usr/bin so move files to this
+                                    directory instead! -->
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- logstash -->
+                    <execution>
+                        <id>untar ${logstash.tar.gz}</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>tar</executable>
+                            <arguments>
+                                <argument>-xf</argument>
+                                <argument>${dir.dependency}/${logstash.tar.gz}</argument>
+                                <argument>-C</argument>
+                                <argument>${dir.target}/${logstash.path}</argument>
+                                <argument>--strip-components</argument>
+                                <argument>1</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- logstash-rest-server -->
+                    <execution>
+                        <id>untar ${gs-log-rest-server.tar.gz}</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>tar</executable>
+                            <arguments>
+                                <argument>-xzhf</argument>
+                                <argument>${dir.dependency}/${gs-log-rest-server.tar.gz}</argument>
+                                <argument>-C</argument>
+                                <argument>${dir.target}/${gs-log-rest-server.path}</argument>
+                                <argument>--strip-components</argument>
+                                <argument>1</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- chmod config bin -->
+                    <execution>
+                        <id>chmod config.bin</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>chmod</executable>
+                            <arguments>
+                                <argument>u+x</argument>
+                                <argument>${dir.dependency}/${logstash-custom-config.bin}</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- move config.bin -->
+                    <execution>
+                        <id>cp config.bin</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>cp</executable>
+                            <arguments>
+                                <argument>${dir.dependency}/logstash-custom-config.bin</argument>
+                                <argument>${dir.target}/${logstash-custom-config.path}</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+           <plugin>
+             <groupId>com.spotify</groupId>
+             <artifactId>dockerfile-maven-plugin</artifactId>
+             <configuration>
+               <pullNewerImage>false</pullNewerImage>
+               <repository>${docker.name.prefix}/${docker.name.log}</repository>
+              <buildArgs>
+                <LS_ROOT>/${logstash.path}</LS_ROOT>
+                <LOGSTASH_VERSION>${version.log}</LOGSTASH_VERSION>
+                <VERSION_COMMON_BASE_RHEL>${version.common.base-rhel}</VERSION_COMMON_BASE_RHEL>
+              </buildArgs>
+             </configuration>
+             <executions>
+               <execution>
+                 <id>build-image</id>
+                 <phase>package</phase>
+                 <goals>
+                   <goal>build</goal>
+                 </goals>
+                 <configuration>
+                   <tag>${project.version}</tag>
+                 </configuration>
+               </execution>
+               <execution>
+                 <id>build-image2</id>
+                 <phase>package</phase>
+                 <goals>
+                   <goal>build</goal>
+                 </goals>
+                 <configuration>
+                   <tag>latest</tag>
+                 </configuration>
+               </execution>
+             </executions>
+           </plugin>
+        </plugins>
+    </build>
+</project>

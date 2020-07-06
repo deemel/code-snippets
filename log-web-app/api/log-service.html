@@ -1,0 +1,301 @@
+<!DOCTYPE HTML><html><head><title>Log Service REST API documentation</title><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="generator" content="https://github.com/raml2html/raml2html 3.0.1"><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css"><script type="text/javascript" src="https://code.jquery.com/jquery-1.11.0.min.js"></script><script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script><script type="text/javascript">
+      $(document).ready(function() {
+        $('.page-header pre code, .top-resource-description pre code, .modal-body pre code').each(function(i, block) {
+          hljs.highlightBlock(block);
+        });
+
+        $('[data-toggle]').click(function() {
+          var selector = $(this).data('target') + ' pre code';
+          $(selector).each(function(i, block) {
+            hljs.highlightBlock(block);
+          });
+        });
+
+        // open modal on hashes like #_action_get
+        $(window).bind('hashchange', function(e) {
+          var anchor_id = document.location.hash.substr(1); //strip #
+          var element = $('#' + anchor_id);
+
+          // do we have such element + is it a modal?  --> show it
+          if (element.length && element.hasClass('modal')) {
+            element.modal('show');
+          }
+        });
+
+        // execute hashchange on first page load
+        $(window).trigger('hashchange');
+
+        // remove url fragment on modal hide
+        $('.modal').on('hidden.bs.modal', function() {
+          try {
+            if (history && history.replaceState) {
+                history.replaceState({}, '', '#');
+            }
+          } catch(e) {}
+        });
+      });
+    </script><style>
+      .hljs {
+        background: transparent;
+      }
+      .parent {
+        color: #999;
+      }
+      .list-group-item > .badge {
+        float: none;
+        margin-right: 6px;
+      }
+      .panel-title > .methods {
+        float: right;
+      }
+      .badge {
+        border-radius: 0;
+        text-transform: uppercase;
+        width: 70px;
+        font-weight: normal;
+        color: #f3f3f6;
+        line-height: normal;
+      }
+      .badge_get {
+        background-color: #63a8e2;
+      }
+      .badge_post {
+        background-color: #6cbd7d;
+      }
+      .badge_put {
+        background-color: #22bac4;
+      }
+      .badge_delete {
+        background-color: #d26460;
+      }
+      .badge_patch {
+        background-color: #ccc444;
+      }
+      .list-group, .panel-group {
+        margin-bottom: 0;
+      }
+      .panel-group .panel+.panel-white {
+        margin-top: 0;
+      }
+      .panel-group .panel-white {
+        border-bottom: 1px solid #F5F5F5;
+        border-radius: 0;
+      }
+      .panel-white:last-child {
+        border-bottom-color: white;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+      }
+      .panel-white .panel-heading {
+        background: white;
+      }
+      .tab-pane ul {
+        padding-left: 2em;
+      }
+      .tab-pane h1 {
+        font-size: 1.3em;
+      }
+      .tab-pane h2 {
+        font-size: 1.2em;
+        padding-bottom: 4px;
+        border-bottom: 1px solid #ddd;
+      }
+      .tab-pane h3 {
+        font-size: 1.1em;
+      }
+      .tab-content {
+        border-left: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
+        padding: 10px;
+      }
+      #sidebar {
+        margin-top: 30px;
+        padding-right: 5px;
+        overflow: auto;
+        height: 90%;
+      }
+      .top-resource-description {
+        border-bottom: 1px solid #ddd;
+        background: #fcfcfc;
+        padding: 15px 15px 0 15px;
+        margin: -15px -15px 10px -15px;
+      }
+      .resource-description {
+        border-bottom: 1px solid #fcfcfc;
+        background: #fcfcfc;
+        padding: 15px 15px 0 15px;
+        margin: -15px -15px 10px -15px;
+      }
+      .resource-description p:last-child {
+        margin: 0;
+      }
+      .list-group .badge {
+        float: left;
+      }
+      .method_description {
+        margin-left: 85px;
+      }
+      .method_description p:last-child {
+        margin: 0;
+      }
+      .list-group-item {
+        cursor: pointer;
+      }
+      .list-group-item:hover {
+        background-color: #f5f5f5;
+      }
+
+      pre code {
+        overflow: auto;
+        word-wrap: normal;
+        white-space: pre;
+      }
+    </style></head><body data-spy="scroll" data-target="#sidebar"><div class="container"><div class="row"><div class="col-md-9" role="main"><div class="page-header"><h1>Log Service REST API documentation <small>version 1</small></h1><p>{protocol}://{domain}:{port}/log/api/v1</p><h3 id="Log-Service-REST-API"><a href="#Log-Service-REST-API">Log Service REST API</a></h3><pre><code>Interface Description
+</code></pre><h3 id="Introduction"><a href="#Introduction">Introduction</a></h3><p>This document describes the Log Server REST API.</p><h3 id="Supported-Uses-Cases"><a href="#Supported-Uses-Cases">Supported Uses Cases</a></h3><p>An application reports log events using the Log Service REST api. The Log Service processes each event and stores them into the Data Lake. This interface is for applications that are cloud native and need to report logs without using any system calls nor any files. There are other interfaces like syslog, files and Java logging framework. These alternate interfaces allow for integration of logs generated by existing applications with no code changes and by system functions on virtual appliances.</p><p>Supported use cases:</p><ul><li>Ingest log events</li><li>Check service health</li></ul><p>These use cases are supported with two endpoints "events" and "health".</p><p>A log generating application uses the REST "events" endpoint to record a set of log events with the required "message" property. All remaining properties are optional. The log collector will assign the default log plane, current date time and a default source when these parameters are not provided. This basic scenerio allows for an application to log a set of events with minimal resource overhead.</p><p>There are extra parameters available for a log generating application to provide more details about each event. These parameters include the log plane, date time, source, source type and level.</p><p>The "health" endpoint returns the health of the service. This provides the platform and applications with the status of the service.</p></div><div class="panel panel-default"><div class="panel-heading"><h3 id="events" class="panel-title">Log events</h3></div><div class="panel-body"><div class="top-resource-description"><p>Ingest a list of one or more log events with an optional log plane.</p></div><div class="panel-group"><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_events"><span class="parent"></span>/events</a> <span class="methods"><a href="#events_post"><span class="badge badge_post">post</span></a></span></h4></div><div id="panel_events" class="panel-collapse collapse"><div class="panel-body"><div class="list-group"><div onclick="window.location.href = '#events_post'" class="list-group-item"><span class="badge badge_post">post</span><div class="method_description"><p>Ingest one or more log events</p></div><div class="clearfix"></div></div></div></div></div><div class="modal fade" tabindex="0" id="events_post"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_post">post</span> <span class="parent"></span>/events</h4></div><div class="modal-body"><div class="alert alert-info"><p>Ingest one or more log events</p></div><ul class="nav nav-tabs"><li class="active"><a href="#events_post_request" data-toggle="tab">Request</a></li><li><a href="#events_post_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="events_post_request"><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "file://schema/Events.json#",
+  "title": "Events",
+  "description":"A list of events to be processed for a specified log plane",
+  "type" : "object",
+  "properties": {
+    "logPlane": {
+	      "description": "The log plane configured in the Data Lake storage service.  The log plane identifer prefix to the storage area used within the Data Lake.  The default log plane is restlogs.",
+	      "type": ["string", "null"],
+	      "minLength": 1,
+        "pattern": "^[A-Za-z]+$"
+    },
+    "events": {
+        "type" : "array",
+        "items": {
+          "type": "object",
+          "properties": {
+              "message": {
+                  "description": "Log event message as a string",
+                  "type": "string",
+	                "minLength": 1
+             },
+            "dateTime": {
+                "description": "Date time of the log event according to RFC3339.  When property is not provided, the log collector will assign the current date time on behalf of the application.",
+                "type": ["string", "null"],
+                "minLength": 10,
+                "pattern": "^[0-9-+:T.]+"
+            },
+            "source": {
+               "description": "A string representing the source of the log event",
+               "type": ["string", "null"],
+               "minLength": 1
+            },
+            "sourceSyntax": {
+                "description": "Specifies the type of source. If Xpath is used the source should be a YANG instance identifier. If Unspecified is used then any string is allowed",
+                "type": ["string", "null"],
+                "enum": ["Unspecified", "3gpp_dn", "Xpath", "Uuid", "Oid", "File", "Class"],
+                "default": "Unspecified"
+            },
+            "level": {
+               "description": "The level of the log event",
+               "type": ["string", "null" ],
+               "enum": ["info", "debug", "error", "trace", "warn"],
+               "default": "info"
+            }
+         },
+         "required":["message"]
+        }
+      }
+   },
+   "required": ["events"]
+}
+</code></pre><p><strong>Example</strong>:</p><pre><code>       { 
+          "logPlane": "doorWatcher",
+          "events": [{
+              "message"  : "I&#39;m arriving.",
+              "level"    : "warn",
+              "source"   : "1.1.1.2",
+              "sourceSyntax" : "Uuid",
+              "dateTime" : "2016-10-07T20:22:35.712+00:00"
+            },
+            {
+            "message"  : "I&#39;m leaving.",
+            "level"    : "info",
+            "source"   : "1.1.1.2",
+            "sourceSyntax" : "Uuid",
+            "dateTime" : "2016-10-07T22:00:01.322+00:00"
+          }]
+      }
+
+</code></pre></div><div class="tab-pane" id="events_post_response"><h2>HTTP status code <a href="http://httpstatus.es/201" target="_blank">201</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "id": "file:///schema/Message.json#",
+  "title": "Message",
+  "description":"Definition of a message",
+  "type": "object",
+  "properties": {
+    "message": {
+      "description":"A readable message that describes the result of a certain action",
+      "type": "string"
+    }
+  },
+  "required":["message"]
+}
+</code></pre><p><strong>Example</strong>:</p><pre><code>{"message": "Created log events"}
+</code></pre><h2>HTTP status code <a href="http://httpstatus.es/400" target="_blank">400</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "id": "file:///schema/Message.json#",
+  "title": "Message",
+  "description":"Definition of a message",
+  "type": "object",
+  "properties": {
+    "message": {
+      "description":"A readable message that describes the result of a certain action",
+      "type": "string"
+    }
+  },
+  "required":["message"]
+}
+</code></pre><p><strong>Example</strong>:</p><pre><code>{"message": "Malformed content"}
+</code></pre></div></div></div></div></div></div></div></div></div></div><div class="panel panel-default"><div class="panel-heading"><h3 id="health" class="panel-title">Health check</h3></div><div class="panel-body"><div class="top-resource-description"><p>Check health status for the service. This endpoint can be used by platform or log producers to check service health.</p></div><div class="panel-group"><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_health"><span class="parent"></span>/health</a> <span class="methods"><a href="#health_get"><span class="badge badge_get">get</span></a></span></h4></div><div id="panel_health" class="panel-collapse collapse"><div class="panel-body"><div class="list-group"><div onclick="window.location.href = '#health_get'" class="list-group-item"><span class="badge badge_get">get</span><div class="method_description"></div><div class="clearfix"></div></div></div></div></div><div class="modal fade" tabindex="0" id="health_get"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_get">get</span> <span class="parent"></span>/health</h4></div><div class="modal-body"><ul class="nav nav-tabs"><li class="active"><a href="#health_get_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="health_get_response"><h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "id": "file:///schema/Status.json#",
+  "title": "Status",
+  "description":"Definition of a status response",
+  "type": "object",
+  "properties": {
+    "status": {
+      "description":"A green response when the service is healthy and ready to ingest events. A red response when the service is not healthy. A yellow response when the service is in the process of making the transition to green.",
+      "enum": ["red", "yellow", "green"]
+    }
+  },
+  "required": ["status"]
+}
+</code></pre><p><strong>Example</strong>:</p><pre><code>{"status": "green"}
+</code></pre><h2>HTTP status code <a href="http://httpstatus.es/429" target="_blank">429</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "id": "file:///schema/Status.json#",
+  "title": "Status",
+  "description":"Definition of a status response",
+  "type": "object",
+  "properties": {
+    "status": {
+      "description":"A green response when the service is healthy and ready to ingest events. A red response when the service is not healthy. A yellow response when the service is in the process of making the transition to green.",
+      "enum": ["red", "yellow", "green"]
+    }
+  },
+  "required": ["status"]
+}
+</code></pre><p><strong>Example</strong>:</p><pre><code>{"status": "yellow"}
+</code></pre><h2>HTTP status code <a href="http://httpstatus.es/503" target="_blank">503</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "id": "file:///schema/Status.json#",
+  "title": "Status",
+  "description":"Definition of a status response",
+  "type": "object",
+  "properties": {
+    "status": {
+      "description":"A green response when the service is healthy and ready to ingest events. A red response when the service is not healthy. A yellow response when the service is in the process of making the transition to green.",
+      "enum": ["red", "yellow", "green"]
+    }
+  },
+  "required": ["status"]
+}
+</code></pre><p><strong>Example</strong>:</p><pre><code>{"status": "red"}
+</code></pre></div></div></div></div></div></div></div></div></div></div></div><div class="col-md-3"><div id="sidebar" class="hidden-print affix" role="complementary"><ul class="nav nav-pills nav-stacked"><li><a href="#events">Log events</a></li><li><a href="#health">Health check</a></li></ul></div></div></div></div></body></html>

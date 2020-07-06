@@ -1,0 +1,1 @@
+A logging service web application with REST endpoints to forward JSON-formatted events to Logstash and to obtain health status of Logstash.  Written in Java, using Spark framework (http://sparkjava.com).

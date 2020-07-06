@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "file://schema/Events.json#",
+  "title": "Events",
+  "description":"A list of events to be processed for a specified log plane",
+  "type" : "object",
+  "properties": {
+    "logPlane": {
+	      "description": "The log plane configured in the Data Lake storage service.  The log plane identifer prefix to the storage area used within the Data Lake.  The default log plane is restlogs.",
+	      "type": ["string", "null"],
+	      "minLength": 1,
+        "pattern": "^[A-Za-z]+$"
+    },
+    "events": {
+        "type" : "array",
+        "items": {
+          "type": "object",
+          "properties": {
+              "message": {
+                  "description": "Log event message as a string",
+                  "type": "string",
+	                "minLength": 1
+             },
+            "dateTime": {
+                "description": "Date time of the log event according to RFC3339.  When property is not provided, the log collector will assign the current date time on behalf of the application.",
+                "type": ["string", "null"],
+                "minLength": 10,
+                "pattern": "^[0-9-+:T.]+"
+            },
+            "source": {
+               "description": "A string representing the source of the log event",
+               "type": ["string", "null"],
+               "minLength": 1
+            },
+            "sourceSyntax": {
+                "description": "Specifies the type of source. If Xpath is used the source should be a YANG instance identifier. If Unspecified is used then any string is allowed",
+                "type": ["string", "null"],
+                "enum": ["Unspecified", "3gpp_dn", "Xpath", "Uuid", "Oid", "File", "Class"],
+                "default": "Unspecified"
+            },
+            "level": {
+               "description": "The level of the log event",
+               "type": ["string", "null" ],
+               "enum": ["info", "debug", "error", "trace", "warn"],
+               "default": "info"
+            }
+         },
+         "required":["message"]
+        }
+      }
+   },
+   "required": ["events"]
+}

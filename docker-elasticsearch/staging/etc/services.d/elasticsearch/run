@@ -1,0 +1,6 @@
+#!/usr/bin/with-contenv /bin/bash
+
+source /opt/adp/bin/base-common.sh
+
+chown -R elasticsearch:elasticsearch $ES_ROOT
+exec s6-setuidgid elasticsearch $ADP_BIN/elasticsearch-wrapper.sh

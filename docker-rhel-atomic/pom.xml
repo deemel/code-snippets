@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.jupiter.pigs.common</groupId>
+    <artifactId>top</artifactId>
+    <version>0.1.16-SNAPSHOT</version>
+  </parent>
+
+    <artifactId>base-rhel</artifactId>
+    <packaging>pom</packaging>
+
+    <properties>
+        <jre.tar.gz>jre-linux-x64.tar.gz</jre.tar.gz>
+        <jre.path>opt</jre.path>
+        <s6-overlay.tar.gz>s6-overlay.tar.gz</s6-overlay.tar.gz>
+        <s6-overlay.path>.</s6-overlay.path>
+        <base-common.tar.gz>base-common.tar.gz</base-common.tar.gz>
+        <base-common.path>.</base-common.path>
+        <svc-mgmt-agent.tar.gz>svc-mgmt-agent.tar.gz</svc-mgmt-agent.tar.gz>
+        <svc-mgmt-agent.path>.</svc-mgmt-agent.path>
+
+        <dir.dependency>target/dependency</dir.dependency>
+        <dir.target>target/packages</dir.target>
+        <dir.target.java.home>${dir.target}/${jre.path}/jre${java.version}</dir.target.java.home>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>just-containers</groupId>
+            <artifactId>s6-overlay</artifactId>
+            <type>tar.gz</type>
+        </dependency>
+        <dependency>
+            <groupId>com.jupiter.pigs.common</groupId>
+            <artifactId>base-common</artifactId>
+            <version>${version.base-common}</version>
+            <type>tar.gz</type>
+        </dependency>
+        <dependency>
+            <groupId>com.jupiter.pigs.common</groupId>
+            <artifactId>svc-mgmt-agent</artifactId>
+            <version>${version.svc-mgmt-agent}</version>
+            <type>tar.gz</type>
+        </dependency>
+        <dependency>
+            <groupId>oracle</groupId>
+            <artifactId>jre</artifactId>
+            <classifier>linux-x64</classifier>
+            <type>tar.gz</type>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Copy all dependencies to directory "dependency" -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <stripVersion>true</stripVersion>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Create file system structure here -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>creating file system</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <!-- [BUG] Reason for longModulePath: https://github.com/mojohaus/exec-maven-plugin/issues/75 -->
+                            <longModulepath>false</longModulepath>
+                            <executable>mkdir</executable>
+                            <arguments>
+                                <argument>-p</argument>
+                                <argument>${dir.target}/etc</argument>
+                                <argument>${dir.target}/opt/adp</argument>
+                                <argument>${dir.target}/exec</argument>
+                                <argument>${dir.target}/libexec</argument>
+                                <argument>${dir.target}/usr</argument>
+                                <!-- NOTE: never create the directory bin/ as it would destroy
+                                    the already created symlink named bin/ from the Redhat
+                                    distro! The symlink points to usr/bin so move files to this
+                                    directory instead! -->
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- JRE -->
+                    <execution>
+                        <id>untar ${jre.tar.gz}</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>tar</executable>
+                            <arguments>
+                                <argument>-xzhf</argument>
+                                <argument>${dir.dependency}/${jre.tar.gz}</argument>
+                                <argument>-C</argument>
+                                <argument>${dir.target}/${jre.path}</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>reduce jre</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>../tools/build/jre-reduce.sh</executable>
+                            <arguments>
+                                <argument>${dir.target.java.home}</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- S6-overlay
+                        NOTE: ./bin has been excluded so it does not
+                        override the bin/ directory (which is a symlink
+                        generated by Redhat distro). Second extraction
+                        is made on the second maven execution. -->
+                    <execution>
+                        <id>untar ${s6-overlay.tar.gz}</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>tar</executable>
+                            <arguments>
+                                <argument>--exclude</argument>
+                                <argument>./bin</argument>
+                                <argument>--exclude</argument>
+                                <argument>./usr/bin/execlineb</argument>
+                                <argument>-xzhf</argument>
+                                <argument>${dir.dependency}/${s6-overlay.tar.gz}</argument>
+                                <argument>-C</argument>
+                                <argument>${dir.target}/${s6-overlay.path}</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- S6-overlay second extraction
+                        NOTE: this time we set the extraction point for just
+                        ./bin to usr/bin so it does not override the symlink
+                        created by Redhat! -->
+                    <execution>
+                        <id>untar ${s6-overlay.tar.gz} for bin</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>tar</executable>
+                            <arguments>
+                                <argument>-C</argument>
+                                <argument>${dir.target}/${s6-overlay.path}/usr</argument>
+                                <argument>-xzhf</argument>
+                                <argument>${dir.dependency}/${s6-overlay.tar.gz}</argument>
+                                <argument>./bin</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- base-common -->
+                    <execution>
+                        <id>untar ${base-common.tar.gz}</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>tar</executable>
+                            <arguments>
+                                <argument>-xzhf</argument>
+                                <argument>${dir.dependency}/${base-common.tar.gz}</argument>
+                                <argument>-C</argument>
+                                <argument>${dir.target}/${base-common.path}</argument>
+                                <argument>--strip-components</argument>
+                                <argument>1</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- svc-mgmt-agent -->
+                    <execution>
+                        <id>untar ${svc-mgmt-agent.tar.gz}</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>tar</executable>
+                            <arguments>
+                                <argument>-xzhf</argument>
+                                <argument>${dir.dependency}/${svc-mgmt-agent.tar.gz}</argument>
+                                <argument>-C</argument>
+                                <argument>${dir.target}/${svc-mgmt-agent.path}</argument>
+                                <argument>--strip-components</argument>
+                                <argument>1</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Documentation: https://github.com/spotify/docker-maven-plugin -->
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <configuration>
+                    <!--noCache>true</noCache-->
+                    <pullNewerImage>false</pullNewerImage>
+                    <repository>${docker.name.prefix}/${docker.name.base.rhel}</repository>
+                    <buildArgs>
+                      <VERSION_RHEL7_ATOMIC>${version.rhel7-atomic}</VERSION_RHEL7_ATOMIC>
+                      <JAVA_VERSION>${java.version}</JAVA_VERSION>
+                    </buildArgs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>build-image</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                        <configuration>
+                            <tag>${version.common.base-rhel}</tag>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build-image2</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                        <configuration>
+                            <tag>latest</tag>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

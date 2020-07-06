@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.jupiter.pigs.datalake</groupId>
+        <artifactId>top</artifactId>
+        <version>1.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>elasticsearch-docker</artifactId>
+    <packaging>pom</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <type>tar.gz</type>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <elasticsearch.tar.gz>elasticsearch.tar.gz</elasticsearch.tar.gz>
+        <elasticsearch.path>/opt/elasticsearch</elasticsearch.path>
+
+        <dir.dependency>target/dependency</dir.dependency>
+        <dir.target>target/packages</dir.target>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy ${elasticsearch.tar.gz}</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <stripVersion>true</stripVersion>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>elasticsearch</groupId>
+                                    <artifactId>elasticsearch</artifactId>
+                                    <type>tar.gz</type>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                    <!-- Copy all dependencies to directory "dependency" -->
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <stripVersion>true</stripVersion>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <!-- Create main directory structure here -->
+                    <execution>
+                        <id>mkdir structure</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <!-- [BUG] Reason for longModulePath: https://github.com/mojohaus/exec-maven-plugin/issues/75 -->
+                            <longModulepath>false</longModulepath>
+                            <executable>mkdir</executable>
+                            <arguments>
+                                <argument>-p</argument>
+                                <argument>${dir.target}${elasticsearch.path}</argument>
+                                <!-- argument> ANOTHER DESIRED PATH ... </argument -->
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- Untar ElasticSearch -->
+                    <execution>
+                        <id>untar ${elasticsearch.tar.gz}</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>tar</executable>
+                            <arguments>
+                                <argument>xf</argument>
+                                <argument>${dir.dependency}/${elasticsearch.tar.gz}</argument>
+                                <argument>-C</argument>
+                                <argument>${dir.target}/${elasticsearch.path}</argument>
+                                <argument>--strip-components</argument>
+                                <argument>1</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+                <!-- Build docker image with: mvn docker:build, which is also bound to: mvn package -->
+
+           <plugin>
+             <groupId>com.spotify</groupId>
+             <artifactId>dockerfile-maven-plugin</artifactId>
+             <configuration>
+               <!--noCache>true</noCache-->
+               <pullNewerImage>false</pullNewerImage>
+               <repository>${docker.name.prefix}/${docker.name.elasticsearch}</repository>
+              <buildArgs>
+                <VERSION_COMMON_BASE_RHEL>${version.common.base-rhel}</VERSION_COMMON_BASE_RHEL>
+                <ES_ROOT>${elasticsearch.path}</ES_ROOT>
+                <ELASTICSEARCH_VERSION>${version.elasticsearch}</ELASTICSEARCH_VERSION>
+              </buildArgs>
+             </configuration>
+             <executions>
+               <execution>
+                 <id>build-image</id>
+                 <phase>package</phase>
+                 <goals>
+                   <goal>build</goal>
+                 </goals>
+                 <configuration>
+                   <tag>${project.version}</tag>
+                 </configuration>
+               </execution>
+               <execution>
+                 <id>build-image2</id>
+                 <phase>package</phase>
+                 <goals>
+                   <goal>build</goal>
+                 </goals>
+                 <configuration>
+                   <tag>latest</tag>
+                 </configuration>
+               </execution>
+             </executions>
+           </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,5 @@
+  file {
+    codec => line { format => "%{message}" }
+    path => "/tmp/logstash/logs/%{logplane}-%{+yyyy.MM.dd.HH}"
+  }
+

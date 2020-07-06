@@ -1,0 +1,1 @@
+Compile and install SELinux local policy, containing domain auto transition rule for sshd.  A service’s security context may change to unconfined_java_t when restarted from within a Java program and using an appropriately privileged user account (e.g., root).  This behavior is consistent with inheriting the parent’s domain.

@@ -1,0 +1,12 @@
+#!/usr/bin/with-contenv /bin/bash
+
+source /opt/adp/bin/base-common.sh
+
+
+if ! cmp $FILE_LOGSTASH_CONF $LS_ROOT/config/logstash.conf >/dev/null 2>&1
+then
+  cp $FILE_LOGSTASH_CONF $LS_ROOT/config/logstash.conf
+fi
+
+exec s6-setuidgid root $LS_ROOT/bin/logstash-custom-config.bin
+

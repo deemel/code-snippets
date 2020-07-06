@@ -1,0 +1,18 @@
+path:
+  data: ${ES_ROOT}/data
+  logs: ${ES_ROOT}/log
+
+bootstrap:
+  memory_lock: false
+
+http:
+  compression: true
+  host: 0.0.0.0
+
+transport:
+  host: 0.0.0.0
+
+## http:
+##   cors:
+##     enabled: ${HTTP_CORS_ENABLE}
+##     allow-origin: ${HTTP_CORS_ALLOW_ORIGIN}

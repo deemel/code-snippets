@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv /bin/bash
+
+source /opt/adp/bin/base-common.sh
+
+$ADP_BIN/s6-terminate.sh

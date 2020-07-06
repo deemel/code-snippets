@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "id": "file:///schema/Status.json#",
+  "title": "Status",
+  "description":"Definition of a status response",
+  "type": "object",
+  "properties": {
+    "status": {
+      "description":"A green response when the service is healthy and ready to ingest events. A red response when the service is not healthy. A yellow response when the service is in the process of making the transition to green.",
+      "enum": ["red", "yellow", "green"]
+    }
+  },
+  "required": ["status"]
+}

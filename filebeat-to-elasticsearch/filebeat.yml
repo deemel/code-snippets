@@ -1,0 +1,11 @@
+filebeat.prospectors:
+- input_type: log
+  paths:
+    - /root/adp/fb-to-es/SecurityAuth.audit
+  fields:
+    logplane: auditlogs
+  fields_under_root: true
+  tail_files: true
+
+output.elasticsearch:
+  hosts: '${ELASTICSEARCH_HOSTS}'

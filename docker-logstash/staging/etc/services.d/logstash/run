@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv /bin/bash
+
+source /opt/adp/bin/base-common.sh
+
+exec s6-setuidgid logstash $ADP_BIN/logstash-wrapper.sh

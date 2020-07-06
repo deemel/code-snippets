@@ -1,0 +1,4 @@
+[rhel-7-server-rpms]
+name=rhel-7-server-rpms
+baseurl=http://yum2.linux.jupiter.se/repos/rhel-7-server-rpms
+enabled=1

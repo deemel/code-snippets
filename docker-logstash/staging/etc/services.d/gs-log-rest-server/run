@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv /bin/bash
+
+source /opt/adp/bin/base-common.sh
+
+exec s6-setuidgid root $ADP_BIN/gs-log-rest-server.sh

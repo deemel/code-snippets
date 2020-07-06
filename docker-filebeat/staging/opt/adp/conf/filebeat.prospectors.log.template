@@ -1,0 +1,4 @@
+- input_type: log
+# FILEBEAT_CONF
+  fields_under_root: true
+  tail_files: true
