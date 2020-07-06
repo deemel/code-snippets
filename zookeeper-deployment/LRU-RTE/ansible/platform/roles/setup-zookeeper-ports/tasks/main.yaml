@@ -1,0 +1,37 @@
+---
+- name: Configure Zookeeper Firewall ports
+  include_role:
+    name: firewalld
+    tasks_from: main
+  vars:
+    list_of_ports:
+      - { protocol: 'tcp', port: '2281' }
+      - { protocol: 'tcp', port: '2888' }
+      - { protocol: 'tcp', port: '3888' }
+      - { protocol: 'tcp', port: '18880' }
+      - { protocol: 'tcp', port: '18881' }
+      - { protocol: 'tcp', port: '18882' }
+      - { protocol: 'tcp', port: '18883' }
+      - { protocol: 'tcp', port: '28880' }
+      - { protocol: 'tcp', port: '28881' }
+      - { protocol: 'tcp', port: '28882' }
+      - { protocol: 'tcp', port: '28883' }
+    firewall_services: [{ "name": "zk-server-ports", "ports": "{{ list_of_ports }} " }]
+    firewall_outgoing: []
+
+- firewalld_outgoing:
+      port: "{{ item.port }}/tcp"
+      immediate: yes
+      state: enabled
+  with_items:
+      - { port: '2281' }
+      - { port: '2888' }
+      - { port: '3888' }
+      - { port: '18880' }
+      - { port: '18881' }
+      - { port: '18882' }
+      - { port: '18883' }
+      - { port: '28880' }
+      - { port: '28881' }
+      - { port: '28882' }
+      - { port: '28883' }

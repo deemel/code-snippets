@@ -1,0 +1,476 @@
+#!/usr/bin/env bash
+
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# 
+# ZooKeeper
+# 
+# chkconfig: 2345 89 9 
+# description: zookeeper
+
+# ======================================================================
+# Shell variables originating from Maven properties.
+# ======================================================================
+
+RC_SUCCESS=${rc.success}
+STR_TRUE="${str.true}"
+STR_FALSE="${str.false}"
+ZK_RPM_NAME="${zk.rpm.name}"
+NAME_ZOOKEEPER="${name.zookeeper}"
+FLW_RESP_NOT_SERVING_REQUESTS="${flw.resp.not.serving.requests}"
+
+USER_ZOOKEEPER="${user.zookeeper}"
+
+DIR_ZK_BIN="${dir.zk.bin}"
+DIR_ZK_MFDD_BIN="${dir.zk.mfdd.bin}"
+DIR_MFDD_BIN="${dir.mfdd.bin}"
+
+FILE_ZK_MFDD_LIB="${file.zk.mfdd.lib}"
+FILE_ZK_CONFIG_DAT="${file.zk.config.dat}"
+FILE_ZK_CONFIG_SH="${file.zk.config.sh}"
+FILE_ZOOKEEPER_CONF="${file.zookeeper.conf}"
+FILE_ZOOKEEPER_ENV="${file.zookeeper-env}"
+FILE_ZOOKEEPER_SERVICE_SYSTEMD="${file.zookeeper.service.systemd}"
+
+CMD_FLW="${cmd.flw}"
+CMD_PURGE_TXN_LOG="${cmd.purge.txn.log}"
+CMD_EXPORT_OAM_ZK_CLIENT_OPTS="${cmd.export.oam.zk.client.opts}"
+CMD_ZK_START_SYSTEMD="${cmd.zk.start.systemd}"
+CMD_ZK_STOP_SYSTEMD="${cmd.zk.stop.systemd}"
+CMD_ZK_RESTART_SYSTEMD="${cmd.zk.restart.systemd}"
+
+# ======================================================================
+# Constants.
+# ======================================================================
+
+USER="$(whoami)"
+MFDD_DIR_CRED_DEF="/etc/opt/mfdd/.$USER/zk"
+SRVR_MODE_DEAD="dead"
+SRVR_MODE_ALIVE="alive"
+SRVR_MODE_CLIENT="client"
+SRVR_OUTPUT_CONNECTION_REFUSED="Connection refused"
+ENSEMBLE_STATUS_UP="up"
+ENSEMBLE_STATUS_DOWN="down"
+ZK_PORT_DEF=2181
+
+# ======================================================================
+
+#
+# Determine whether ZK is installed.
+#
+isZkInstalled="$STR_FALSE"
+
+rpm -qa | grep -q "$ZK_RPM_NAME"
+if [ $? -eq $RC_SUCCESS ]
+then
+  isZkInstalled="$STR_TRUE"
+fi
+
+#
+# Source in various files.
+#
+source /etc/rc.d/init.d/functions
+source $FILE_ZOOKEEPER_CONF
+
+if [ "$isZkInstalled" = "$STR_TRUE" ]
+then
+  source $FILE_ZOOKEEPER_ENV
+  source $ZOOBINDIR/zkEnv.sh > /dev/null 2>&1
+
+  if [ ! -f "$FILE_ZK_CONFIG_SH" ]
+  then
+    source $FILE_ZK_MFDD_LIB
+
+    #
+    # Read zookeeperConfiguration.dat & create zookeeperConfiguration.sh.
+    #
+    zkConfigDatRead > /dev/null 2>&1
+  fi
+
+  source $FILE_ZK_CONFIG_SH
+else
+  source $FILE_ZK_CONFIG_DAT
+
+  $CMD_EXPORT_OAM_ZK_CLIENT_OPTS
+  CMD_FLW="$DIR_MFDD_BIN/$(basename $CMD_FLW)"
+fi
+
+if [ -z "$ZK_USES_PORT_SECURE" ]
+then
+  ZK_USES_PORT_SECURE="$STR_TRUE"
+
+  if [ -z "$ZK_PORT_SECURE" ]
+  then
+    ZK_USES_PORT_SECURE="$STR_FALSE"
+  fi
+fi
+
+if [ -z "$ZK_PORT" ]
+then
+  ZK_PORT=$ZK_PORT_DEF
+fi
+
+RETVAL=$RC_SUCCESS
+PIDFILE="${ZOOPIDFILE}"
+desc="ZooKeeper daemon"
+
+#
+# Convert MFDD_ZK_CONNECT environment variable into a space-separated list.
+#
+MFDD_ZK_CONNECT_2="${MFDD_ZK_CONNECT//,/$' '}"
+
+#
+# Set max # open file descriptors.  Only users with root privilege can do this.
+#
+ulimit -n 65535 2> /dev/null
+
+_start() {
+  echo -n $"Starting $desc ($NAME_ZOOKEEPER): "
+  daemon --user $USER_ZOOKEEPER $ZOOBINDIR/zkServer.sh start
+  RETVAL=$?
+  echo
+  [ $RETVAL -eq $RC_SUCCESS ] && touch /var/lock/subsys/$NAME_ZOOKEEPER
+  return $RETVAL
+}
+
+_stop() {
+  echo -n $"Stopping $desc ($NAME_ZOOKEEPER): "
+  daemon --user $USER_ZOOKEEPER $ZOOBINDIR/zkServer.sh stop
+  RETVAL=$?
+  sleep 5
+  echo
+  [ $RETVAL -eq $RC_SUCCESS ] && rm -f /var/lock/subsys/$NAME_ZOOKEEPER $PIDFILE
+  return $RETVAL
+}
+
+_restart() {
+  stop
+  RETVAL=$?
+
+  if [ $RETVAL -eq $RC_SUCCESS ]
+  then
+    start
+    RETVAL=$?
+  fi
+
+  return $RETVAL
+}
+
+start() {
+  if [ -f "$FILE_ZOOKEEPER_SERVICE_SYSTEMD" ]
+  then
+    $CMD_ZK_START_SYSTEMD
+  else
+    _start
+  fi
+
+  RETVAL=$?
+  return $RETVAL
+}
+
+stop() {
+  if [ -f "$FILE_ZOOKEEPER_SERVICE_SYSTEMD" ]
+  then
+    $CMD_ZK_STOP_SYSTEMD
+  else
+    _stop
+  fi
+
+  RETVAL=$?
+  return $RETVAL
+}
+
+restart() {
+  if [ -f "$FILE_ZOOKEEPER_SERVICE_SYSTEMD" ]
+  then
+    $CMD_ZK_RESTART_SYSTEMD
+  else
+    _restart
+  fi
+
+  RETVAL=$?
+  return $RETVAL
+}
+
+checkstatus(){
+  daemon --user $USER_ZOOKEEPER $ZOOBINDIR/zkServer.sh status
+  RETVAL=$?
+  return $RETVAL
+}
+
+condrestart(){
+  [ -e /var/lock/subsys/$NAME_ZOOKEEPER ] && restart || :
+  RETVAL=$?
+  return $RETVAL
+}
+
+function checkCertificates() {
+  if [ -z "$MFDD_DIR_CRED" ]
+  then
+    MFDD_DIR_CRED="$MFDD_DIR_CRED_DEF"
+  fi
+
+  if [ ! -d "$MFDD_DIR_CRED" ]
+  then
+    echo "User \"$USER\" has no credentials directory \"$MFDD_DIR_CRED\"."
+    return $?
+  fi
+
+  if [ ! -r "$MFDD_DIR_CRED" ]
+  then
+    echo "User \"$USER\" has no read permission for credentials directory \"$MFDD_DIR_CRED\"."
+    return $?
+  fi
+
+  return $?
+}
+
+function flw() {
+  local server="$1"
+  local port=$2
+  local cmds="${@:3}"
+
+  for i in $cmds
+  do
+    $CMD_FLW "$server" $port "$i" 2> /dev/null
+  done
+
+  return $?
+}
+
+function flwAllZkServers() {
+  local cmds="$@"
+
+  for i in $MFDD_ZK_CONNECT_2
+  do
+    local server=$(echo "$i" | cut -d':' -f1)
+    local port=$(echo "$i" | cut -d':' -f2)
+
+    echo "============================================================ $server"
+    for j in $cmds
+    do
+      if [ "$j" = "ruok" ]
+      then
+        echo -n "$j -> "
+      fi
+
+      $CMD_FLW "$server" $port "$j" 2> /dev/null
+      echo
+    done
+  done
+
+  return $?
+}
+
+function status() {
+  local hostName="$(hostname -s)"
+  local ensembleStatus="$ENSEMBLE_STATUS_DOWN"
+  local modeThis="$SRVR_MODE_CLIENT"
+  local modeAll=""
+
+  for i in $MFDD_ZK_CONNECT_2
+  do
+    local server=$(echo "$i" | cut -d':' -f1)
+    local port=$(echo "$i" | cut -d':' -f2)
+    local output=$(flw "$server" $port "srvr")
+
+    local srvrMode=$(echo "$output" | grep "Mode: ")
+    if [ $? -eq $RC_SUCCESS ]
+    then
+      srvrMode=$(echo "$srvrMode" | cut -d' ' -f2)
+    fi
+
+    echo "$output" | grep -q "$FLW_RESP_NOT_SERVING_REQUESTS"
+    if [ $? -eq $RC_SUCCESS ]
+    then
+      #
+      # This is last ZK standing in ensemble.
+      #
+      srvrMode="$SRVR_MODE_ALIVE"
+    fi
+
+    if [ -z "$srvrMode" ]
+    then
+      srvrMode="$SRVR_MODE_DEAD"
+    fi
+
+    if [ "$srvrMode" != "$SRVR_MODE_DEAD" ] && [ "$srvrMode" != "$SRVR_MODE_ALIVE" ]
+    then
+      ensembleStatus="$ENSEMBLE_STATUS_UP"
+    fi
+
+    if [ -z "$modeAll" ]
+    then
+      modeAll="$server: $srvrMode"
+    else
+      modeAll="$modeAll, $server: $srvrMode"
+    fi
+
+    if [ "$server" = "$hostName" ]
+    then
+      modeThis="$srvrMode"
+    fi
+  done
+
+  echo "$modeAll"
+  echo "Mode: $modeThis"
+  echo "Ensemble status: $ensembleStatus"
+  echo "Secure mode: $ZK_USES_PORT_SECURE"
+
+  if [ "$ZK_USES_PORT_SECURE" = "$STR_TRUE" ]
+  then
+    checkCertificates
+  fi
+
+  [ "$ensembleStatus" = "$ENSEMBLE_STATUS_UP" ]
+  RETVAL=$?
+
+  return $RETVAL
+}
+
+function check() {
+  echo "Running as \"$USER\" with ports $ZK_PORT:$ZK_PORT_SECURE."
+  echo
+
+  flwAllZkServers "ruok"
+
+  if [ "$ZK_USES_PORT_SECURE" != "$STR_TRUE" ]
+  then
+    return $?
+  fi
+
+  checkCertificates
+
+  for i in $MFDD_ZK_CONNECT_2
+  do
+    local server=$(echo "$i" | cut -d':' -f1)
+
+    echo "============================================================ $server"
+    (openssl s_client -showcerts -connect $i &) 2>&1 > /dev/null
+    sleep 1
+
+    pid=$(pidof openssl)
+    if [ ! -z "$pid" ]
+    then
+      kill $pid
+    fi
+  done
+
+  return $?
+}
+
+function zk_pending_syncs() {
+  local rc=$RC_FAILURE
+
+  for i in $MFDD_ZK_CONNECT_2
+  do
+    local server=$(echo "$i" | cut -d':' -f1)
+    local port=$(echo "$i" | cut -d':' -f2)
+    local output=$(flw "$server" $port "mntr")
+
+    echo -e "$output" | grep -q "zk_server_state[[:space:]]\+leader"
+
+    rc=$?
+    if [ $rc -ne $RC_SUCCESS ]
+    then
+      continue
+    fi
+
+    #
+    # Number of pending syncs only provided by ZK leader.
+    #
+    local zkPendingSyncs=$(echo -e "$output" | grep "zk_pending_syncs" | awk '{print $2}')
+    echo "$server: zk_pending_syncs: $zkPendingSyncs"
+
+    RETVAL=$rc
+    return $RETVAL
+  done
+
+  echo "Unable to determine ZK leader."
+
+  RETVAL=$rc
+  return $RETVAL
+}
+
+case "$1" in
+  _start)
+    [ "$isZkInstalled" = "$STR_TRUE" ] && _start
+    ;;
+  _stop)
+    [ "$isZkInstalled" = "$STR_TRUE" ] && _stop
+    ;;
+  _restart)
+    [ "$isZkInstalled" = "$STR_TRUE" ] && _restart
+    ;;
+  start)
+    [ "$isZkInstalled" = "$STR_TRUE" ] && start
+    ;;
+  stop)
+    [ "$isZkInstalled" = "$STR_TRUE" ] && stop
+    ;;
+  status)
+    status
+    ;;
+  restart)
+    [ "$isZkInstalled" = "$STR_TRUE" ] && restart
+    ;;
+  condrestart)
+    [ "$isZkInstalled" = "$STR_TRUE" ] && condrestart
+    ;;
+  info)
+    flwAllZkServers "srvr"
+    ;;
+  watch)
+    flwAllZkServers "wchs" "cons" "wchc"
+    ;;
+  purge)
+    [ "$isZkInstalled" = "$STR_TRUE" ] && $CMD_PURGE_TXN_LOG
+    ;;
+  check)
+    check
+    ;;
+  mntr)
+    flwAllZkServers "$1"
+    ;;
+  stat)
+    flwAllZkServers "$1"
+    ;;
+  is_secure)
+    echo "$ZK_USES_PORT_SECURE"
+    ;;
+  zk_port_client)
+    echo "$ZK_PORT"
+    ;;
+  zk_port_secure)
+    echo "$ZK_PORT_SECURE"
+    ;;
+  secure_client_opts)
+    echo "$OAM_ZK_CLIENT_OPTS"
+    ;;
+  zk_pending_syncs)
+    zk_pending_syncs
+    ;;
+  *)
+    if [ "$isZkInstalled" != "$STR_TRUE" ]
+    then
+      echo "ZooKeeper is not installed on this node."
+      exit $RC_FAILURE
+    fi
+
+    sudo -u $USER_ZOOKEEPER bash -c "$DIR_ZK_BIN/zkServer.sh $1"
+esac
+
+exit $RETVAL

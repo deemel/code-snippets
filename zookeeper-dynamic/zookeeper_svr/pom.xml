@@ -1,0 +1,435 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.jupiter.mfdd.install</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>3.23.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.jupiter.mfdd.install.zookeeper</groupId>
+    <artifactId>zookeeper_svr</artifactId>
+    <packaging>pom</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>${mapr.release}</version>
+            <type>tar.gz</type>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-util</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.jupiter.mfdd.security</groupId>
+            <artifactId>zookeeper-security</artifactId>
+            <version>${project.version}</version>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <activation>
+                <os>
+                    <family>unix</family>
+                </os>
+            </activation>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>${dir.src.main}</directory>
+                        <filtering>true</filtering>
+                    </resource>
+                </resources>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>filter resources</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>resources</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy ${filename.zk.tar.gz}</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>zookeeper</groupId>
+                                            <artifactId>zookeeper</artifactId>
+                                            <!-- version>${mapr.release}</version -->
+                                            <type>tar.gz</type>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>org.eclipse.jetty</groupId>
+                                            <artifactId>jetty-util</artifactId>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>com.jupiter.mfdd.security</groupId>
+                                            <artifactId>zookeeper-security</artifactId>
+                                            <version>${project.version}</version>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>untar ${filename.zk.tar.gz}</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>tar</executable>
+                                    <arguments>
+                                        <argument>xfz</argument>
+                                        <argument>${file.zk.tar.gz}</argument>
+                                        <argument>--exclude=bin/*.cmd</argument>
+                                        <argument>--exclude=bin/${filename.zk.env.sh}</argument>
+                                        <argument>--exclude=build.xml</argument>
+                                        <argument>--exclude=contrib</argument>
+                                        <argument>--exclude=conf/${filename.log4j.properties}</argument>
+                                        <argument>--exclude=dist-maven</argument>
+                                        <argument>--exclude=docs</argument>
+                                        <argument>--exclude=ivy*.xml</argument>
+                                        <argument>--exclude=lib/cobertura</argument>
+                                        <argument>--exclude=lib/jdiff</argument>
+                                        <argument>--exclude=recipes</argument>
+                                        <argument>--exclude=src</argument>
+                                        <argument>-C</argument>
+                                        <argument>${dir.target}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>rpm-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>create ${rpm.description} rpm</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>attached-rpm</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <defineStatements>
+                                <defineStatement>_unpackaged_files_terminate_build 0</defineStatement>
+                            </defineStatements>
+
+                            <summary>${rpm.description} RPM package</summary>
+                            <description>${rpm.description} RPM package</description>
+                            <!-- version>${mapr.release._}</version -->
+                            <vendor>${rpm.configuration.vendor}</vendor>
+                            <group>${rpm.configuration.group}</group>
+                            <copyright>${rpm.configuration.copyright}</copyright>
+                            <needarch>${rpm.configuration.needarch}</needarch>
+                            <targetOS>${rpm.configuration.targetOS}</targetOS>
+                            <defaultUsername>${user.zookeeper}</defaultUsername>
+                            <defaultGroupname>${group.zookeeper}</defaultGroupname>
+                            <defaultDirmode>${perms.rwx.r-x.r-x}</defaultDirmode>
+
+                            <requires>
+                                <require>mfdd-ip-plane</require>
+                            </requires>
+
+                            <mappings>
+                                <!-- Install ZK. -->
+                                <mapping>
+                                    <sources>
+                                        <source>
+                                            <location>${dir.zk.source}</location>
+                                        </source>
+                                    </sources>
+                                    <directory>${dir.zk.root}</directory>
+                                    <directoryIncluded>true</directoryIncluded>
+                                    <recurseDirectories>true</recurseDirectories>
+                                </mapping>
+
+                                <!-- Install dependencies. -->
+                                <mapping>
+                                    <sources>
+                                        <source>
+                                            <location>${dir.target.dependency}</location>
+                                            <includes>
+                                                <include>*.jar</include>
+                                            </includes>
+                                        </source>
+                                    </sources>
+                                    <directory>${dir.zk.lib}</directory>
+                                    <filemode>${perms.rw-.rw-.r--}</filemode>
+                                </mapping>
+
+                                <!-- Create MFDD ZK bin directory. -->
+                                <mapping>
+                                    <directory>${dir.zk.mfdd.bin}</directory>
+                                </mapping>
+                                <!-- Install Maven-filtered MFDD ZK bin files. -->
+                                <mapping>
+                                    <sources>
+                                        <source>
+                                            <location>${dir.filtered.bin}</location>
+                                        </source>
+                                    </sources>
+                                    <directory>${dir.zk.mfdd.bin}</directory>
+                                    <directoryIncluded>false</directoryIncluded>
+                                    <filemode>${perms.rwx.r-x.r-x}</filemode>
+                                </mapping>
+
+                                <!-- Create MFDD ZK configuration directory. -->
+                                <mapping>
+                                    <directory>${dir.zk.mfdd.conf}</directory>
+                                </mapping>
+                                <!-- Install Maven-filtered MFDD ZK configuration files. -->
+                                <mapping>
+                                    <sources>
+                                        <source>
+                                            <location>${dir.filtered.conf}</location>
+                                        </source>
+                                    </sources>
+                                    <directory>${dir.zk.mfdd.conf}</directory>
+                                    <directoryIncluded>false</directoryIncluded>
+                                    <filemode>${perms.rw-.r--.r--}</filemode>
+                                </mapping>
+
+                                <!-- Mark MFDD's zookeeper-env.sh as configuration file. -->
+                                <mapping>
+                                    <configuration>true</configuration>
+                                    <sources>
+                                        <source>
+                                            <location>${file.src.zookeeper-env}</location>
+                                        </source>
+                                    </sources>
+                                    <directory>${dir.zk.mfdd.bin}</directory>
+                                    <filemode>${perms.rwx.r-x.r-x}</filemode>
+                                </mapping>
+
+                                <!-- Create MFDD's zookeeper-env.sh link in /opt/zookeeper/conf. -->
+                                <mapping>
+                                    <sources>
+                                        <softlinkSource>
+                                            <location>${dir.zk.mfdd.bin}/${filename.zookeeper-env}</location>
+                                        </softlinkSource>
+                                    </sources>
+                                    <directory>${dir.zk.conf}</directory>
+                                </mapping>
+                                <!-- Create MFDD's zookeeper-env.sh link in /etc/profile.d. -->
+                                <mapping>
+                                    <sources>
+                                        <softlinkSource>
+                                            <location>${dir.zk.mfdd.bin}/${filename.zookeeper-env}</location>
+                                        </softlinkSource>
+                                    </sources>
+                                    <directory>${dir.profile.d}</directory>
+                                    <username>${user.root}</username>
+                                    <groupname>${group.root}</groupname>
+                                </mapping>
+
+                                <!-- Create zkEnv.sh link in /opt/zookeeper/bin. -->
+                                <mapping>
+                                    <sources>
+                                        <softlinkSource>
+                                            <location>${dir.zk.mfdd.bin}/${filename.zk.env.sh}</location>
+                                        </softlinkSource>
+                                    </sources>
+                                    <directory>${dir.zk.bin}</directory>
+                                </mapping>
+
+                                <!-- Create LRU's log4j.properties link in /opt/zookeeper/conf. -->
+                                <mapping>
+                                    <sources>
+                                        <softlinkSource>
+                                            <location>${dir.zk.mfdd.conf}/${filename.log4j.properties}</location>
+                                        </softlinkSource>
+                                    </sources>
+                                    <directory>${dir.zk.conf}</directory>
+                                </mapping>
+
+                                <!-- Create initial zoo.cfg. -->
+                                <mapping>
+                                    <configuration>true</configuration>
+                                    <sources>
+                                        <source>
+                                            <location>${dir.filtered.conf}/${filename.zoo.cfg.template}</location>
+                                            <destination>${filename.zoo.cfg}</destination>
+                                        </source>
+                                    </sources>
+                                    <directory>${dir.zk.conf}</directory>
+                                </mapping>
+
+                                <!-- Create ZK log directory. -->
+                                <mapping>
+                                    <directory>${dir.zk.log}</directory>
+                                    <filemode>${perms.rwx.rwx.rwx}</filemode>
+                                </mapping>
+
+                                <!-- Create tunnels directory. -->
+                                <mapping>
+                                    <directory>${dir.tunnels}</directory>
+                                    <username>${user.root}</username>
+                                    <groupname>${group.root}</groupname>
+                                    <filemode>${perms.rwx.r-x.r-x}</filemode>
+                                </mapping>
+
+                                <!-- Create tunnels bin directory. -->
+                                <mapping>
+                                    <directory>${dir.tunnels.bin}</directory>
+                                    <username>${user.root}</username>
+                                    <groupname>${group.root}</groupname>
+                                    <filemode>${perms.rwx.r-x.r-x}</filemode>
+                                </mapping>
+                                <!-- Install Maven-filtered tunnels bin files. -->
+                                <mapping>
+                                    <sources>
+                                        <source>
+                                            <location>${dir.filtered.tunnels.bin}</location>
+                                        </source>
+                                    </sources>
+                                    <directory>${dir.tunnels.bin}</directory>
+                                    <directoryIncluded>false</directoryIncluded>
+                                    <username>${user.root}</username>
+                                    <groupname>${group.root}</groupname>
+                                    <filemode>${perms.rwx.r-x.r-x}</filemode>
+                                </mapping>
+
+                                <!-- Create tunnels certificates directory. -->
+                                <mapping>
+                                    <directory>${dir.tunnels.certs}</directory>
+                                    <username>${user.root}</username>
+                                    <groupname>${group.root}</groupname>
+                                    <filemode>${perms.rwx.r-x.r-x}</filemode>
+                                </mapping>
+                                <!-- Install Maven-filtered tunnels certificates files. -->
+                                <mapping>
+                                    <sources>
+                                        <source>
+                                            <location>${dir.filtered.tunnels.certs}</location>
+                                        </source>
+                                    </sources>
+                                    <directory>${dir.tunnels.certs}</directory>
+                                    <directoryIncluded>false</directoryIncluded>
+                                    <username>${user.root}</username>
+                                    <groupname>${group.root}</groupname>
+                                    <filemode>${perms.rwx.r-x.r-x}</filemode>
+                                </mapping>
+
+                                <!-- Create tunnels log directory. -->
+                                <mapping>
+                                    <directory>${dir.tunnels.log}</directory>
+                                    <username>${user.root}</username>
+                                    <groupname>${group.root}</groupname>
+                                    <filemode>${perms.rwx.r-x.r-x}</filemode>
+                                </mapping>
+
+                                <!-- Create MFDD's tunnels-tool.sh link in /etc/rc.d/init.d. -->
+                                <mapping>
+                                    <sources>
+                                        <softlinkSource>
+                                            <location>${cmd.tunnels.tool}</location>
+                                            <destination>${name.tunnels}</destination>
+                                        </softlinkSource>
+                                    </sources>
+                                    <directory>${dir.init.d}</directory>
+                                    <username>${user.root}</username>
+                                    <groupname>${group.root}</groupname>
+                                </mapping>
+                            </mappings>
+
+                            <prepareScriptlet>
+                                <scriptFile>${rpm.scriptlet.prepare}</scriptFile>
+                            </prepareScriptlet>
+
+                            <preinstallScriptlet>
+                                <scriptFile>${rpm.scriptlet.preinstall}</scriptFile>
+                            </preinstallScriptlet>
+
+                            <installScriptlet>
+                                <scriptFile>${rpm.scriptlet.install}</scriptFile>
+                            </installScriptlet>
+
+                            <postinstallScriptlet>
+                                <scriptFile>${rpm.scriptlet.postinstall}</scriptFile>
+                            </postinstallScriptlet>
+
+                            <preremoveScriptlet>
+                                <scriptFile>${rpm.scriptlet.preremove}</scriptFile>
+                            </preremoveScriptlet>
+
+                            <postremoveScriptlet>
+                                <scriptFile>${rpm.scriptlet.postremove}</scriptFile>
+                            </postremoveScriptlet>
+
+                            <verifyScriptlet>
+                                <scriptFile>${rpm.scriptlet.verify}</scriptFile>
+                            </verifyScriptlet>
+
+                            <cleanScriptlet>
+                                <scriptFile>${rpm.scriptlet.clean}</scriptFile>
+                            </cleanScriptlet>
+
+                            <pretransScriptlet>
+                                <scriptFile>${rpm.scriptlet.pretrans}</scriptFile>
+                            </pretransScriptlet>
+
+                            <posttransScriptlet>
+                                <scriptFile>${rpm.scriptlet.posttrans}</scriptFile>
+                            </posttransScriptlet>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach additional artifacts</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>attach-artifact</goal>
+                                </goals>
+                                <configuration>
+                                    <artifacts>
+                                        <artifact>
+                                            <file>${dir.filtered.bin}/${name.zookeeper}</file>
+                                            <type>${name.zookeeper}</type>
+                                        </artifact>
+                                        <artifact>
+                                            <file>${dir.filtered.bin}/${filename.zk-flw}</file>
+                                            <type>${filename.zk-flw}</type>
+                                        </artifact>
+                                    </artifacts>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

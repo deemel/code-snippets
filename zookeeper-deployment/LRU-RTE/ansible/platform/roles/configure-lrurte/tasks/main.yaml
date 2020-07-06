@@ -1,0 +1,25 @@
+---
+- name: Check zookeeper myid file
+  stat:
+    path: /cvar/var/oam/zookeeper/myid
+  register: zk_myid_stat
+
+- name: set zk_servers
+  set_fact:
+    zk_servers: "{% if LRURTE_POSTDEPLOY == 'False' and zk_myid_stat.stat.exists == True %}{{ lrubef_servers }},{{ lrurte_server }}{% elif LRURTE_POSTDEPLOY == 'False' %}{{ lrubef_servers }}{% else %}{{ lrurte_server }}{% endif %}"
+
+- name: Update /etc/opt/vmmanager/vmmanager.properties
+  replace:
+    path: /etc/opt/vmmanager/vmmanager.properties
+    regexp: '^zookeeper_ip=.*$'
+    replace: 'zookeeper_ip={{ zk_servers }}'
+
+- name: restart zookeeper
+  service:
+    name: "zookeeper"
+    state: restarted
+  when: LRURTE_POSTDEPLOY == 'True'
+
+- name: Setup zkrepl
+  include_role:
+    name: zkrepl-setup

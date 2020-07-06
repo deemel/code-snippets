@@ -1,0 +1,5 @@
+export ZK_DATA_DIR=MFDD_dataDir
+export ZK_DATA_SUB_DIRS=version-2
+export ZK_ARCHIVE_PERIOD=6
+export ZK_PURGE_PERIOD=14
+export ZK_ARCHIVE_DEST=/lru_backup/${name.zookeeper}

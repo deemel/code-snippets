@@ -1,0 +1,219 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.jupiter.mfdd.install</groupId>
+    <artifactId>mfdd-install</artifactId>
+    <version>3.23.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>zookeeper</artifactId>
+  <packaging>pom</packaging>
+
+  <properties>
+    <rpm.description>ZooKeeper server ${mapr.release}</rpm.description>
+
+    <user.root>root</user.root>
+    <group.root>${user.root}</group.root>
+    <user.zookeeper>${name.zookeeper}</user.zookeeper>
+    <group.zookeeper>${name.zookeeper}</group.zookeeper>
+    <user.tunnel>tunnel</user.tunnel>
+    <group.tunnel>sshusers</group.tunnel>
+
+    <perms.rwx.rwx.rwx>777</perms.rwx.rwx.rwx>
+    <perms.rwx.r-x.r-x>755</perms.rwx.r-x.r-x>
+    <perms.rw-.rw-.r-->664</perms.rw-.rw-.r-->
+    <perms.rw-.r--.r-->644</perms.rw-.r--.r-->
+
+    <rc.success>0</rc.success>
+    <rc.failure>1</rc.failure>
+    <str.true>true</str.true>
+    <str.false>false</str.false>
+    <log.date.format>%Y-%m-%d %H:%M:%S</log.date.format>
+    <name.zookeeper>zookeeper</name.zookeeper>
+    <name.tunnels>tunnels</name.tunnels>
+    <comm.method.nc>nc</comm.method.nc>
+    <zk.rpm.name>zookeeper_svr</zk.rpm.name>
+    <flw.resp.not.serving.requests>This ZooKeeper instance is not currently serving requests</flw.resp.not.serving.requests>
+
+    <zoo.cfg.field.secure.client.port>secureClientPort</zoo.cfg.field.secure.client.port>
+    <zk.cfg.dynamic.role.participant>participant</zk.cfg.dynamic.role.participant>
+    <zk.cfg.dynamic.role.observer>observer</zk.cfg.dynamic.role.observer>
+
+    <ext.log>log</ext.log>
+    <ext.template>template</ext.template>
+    <ext.rpmsave>rpmsave</ext.rpmsave>
+
+    <linkname.zookeeper>${name.zookeeper}</linkname.zookeeper>
+    <filename.zk.env.sh>zkEnv.sh</filename.zk.env.sh>
+    <filename.log4j.properties>log4j.properties</filename.log4j.properties>
+    <filename.zk.config>zookeeperConfiguration</filename.zk.config>
+    <filename.zoo.cfg>zoo.cfg</filename.zoo.cfg>
+    <filename.zookeeper.service>${name.zookeeper}.service</filename.zookeeper.service>
+    <filename.zookeeper-env>zookeeper-env.sh</filename.zookeeper-env>
+    <filename.zk-flw>zk-flw.sh</filename.zk-flw>
+    <filename.zk.tar.gz>zookeeper-${mapr.release}.tar.gz</filename.zk.tar.gz>
+    <filename.zoo.cfg.template>${filename.zoo.cfg}.${ext.template}</filename.zoo.cfg.template>
+    <filename.zoo.cfg.dynamic>${filename.zoo.cfg}.dynamic</filename.zoo.cfg.dynamic>
+    <filename.zoo.cfg.dynamic.parse>zoo-cfg-dynamic-parse</filename.zoo.cfg.dynamic.parse>
+
+    <dir.home>/home</dir.home>
+    <dir.home.tunnel>${dir.home}/${user.tunnel}</dir.home.tunnel>
+    <dir.home.zookeeper>${dir.home}/${user.zookeeper}</dir.home.zookeeper>
+    <dir.bin>bin</dir.bin>
+    <dir.certs>certs</dir.certs>
+    <dir.bin>bin</dir.bin>
+    <dir.conf>conf</dir.conf>
+    <dir.var>/var</dir.var>
+    <dir.var.log>${dir.var}/log</dir.var.log>
+    <dir.etc>/etc</dir.etc>
+    <dir.init.d>${dir.etc}/rc.d/init.d</dir.init.d>
+    <dir.src.main>src/main</dir.src.main>
+    <dir.target>target</dir.target>
+    <dir.zk.log>${dir.var.log}/${name.zookeeper}</dir.zk.log>
+    <dir.zk.root>/opt/zookeeper</dir.zk.root>
+    <dir.zk.bin>${dir.zk.root}/${dir.bin}</dir.zk.bin>
+    <dir.zk.conf>${dir.zk.root}/${dir.conf}</dir.zk.conf>
+    <dir.zk.lib>${dir.zk.root}/lib</dir.zk.lib>
+    <dir.zk.mfdd>${dir.zk.root}/mfdd</dir.zk.mfdd>
+    <dir.zk.mfdd.conf>${dir.zk.mfdd}/${dir.conf}</dir.zk.mfdd.conf>
+    <dir.zk.mfdd.bin>${dir.zk.mfdd}/${dir.bin}</dir.zk.mfdd.bin>
+    <dir.mfdd.root>/opt/mfdd/latest/base</dir.mfdd.root>
+    <dir.mfdd.bin>${dir.mfdd.root}/${dir.bin}</dir.mfdd.bin>
+    <dir.mfdd.conf>${dir.mfdd.root}/${dir.conf}</dir.mfdd.conf>
+    <dir.mfdd.conf.d>${dir.mfdd.root}/conf.d</dir.mfdd.conf.d>
+    <dir.mfdd.lib>${dir.mfdd.root}/lib</dir.mfdd.lib>
+    <dir.mfdd.lib.3pp>${dir.mfdd.lib}/3pp</dir.mfdd.lib.3pp>
+    <dir.tunnels>${dir.zk.mfdd}/${name.tunnels}</dir.tunnels>
+    <dir.tunnels.bin>${dir.tunnels}/${dir.bin}</dir.tunnels.bin>
+    <dir.tunnels.certs>${dir.tunnels}/${dir.certs}</dir.tunnels.certs>
+    <dir.tunnels.conf>${dir.tunnels}/${dir.conf}</dir.tunnels.conf>
+    <dir.tunnels.log>${dir.var.log}/${name.tunnels}</dir.tunnels.log>
+    <dir.mfdd.3pp>/opt/mfdd/latest/3pp</dir.mfdd.3pp>
+    <dir.target.dependency>${dir.target}/dependency</dir.target.dependency>
+    <dir.filtered>${dir.target}/classes</dir.filtered>
+    <dir.filtered.bin>${dir.filtered}/${dir.bin}</dir.filtered.bin>
+    <dir.filtered.bin.rpm>${dir.filtered.bin}/rpm</dir.filtered.bin.rpm>
+    <dir.filtered.conf>${dir.filtered}/${dir.conf}</dir.filtered.conf>
+    <dir.filtered.tunnels>${dir.filtered}/${name.tunnels}</dir.filtered.tunnels>
+    <dir.filtered.tunnels.bin>${dir.filtered.tunnels}/${dir.bin}</dir.filtered.tunnels.bin>
+    <dir.filtered.tunnels.certs>${dir.filtered.tunnels}/${dir.certs}</dir.filtered.tunnels.certs>
+    <dir.zk.source>${dir.target}/zookeeper-${apache.release.numeric}.mapr</dir.zk.source>
+    <dir.systemd.system>${dir.etc}/systemd/system</dir.systemd.system>
+    <dir.profile.d>${dir.etc}/profile.d</dir.profile.d>
+
+    <link.zookeeper>${dir.mfdd.3pp}/${linkname.zookeeper}</link.zookeeper>
+    <log.zoo.cfg.dynamic.parse>${dir.zk.log}/${filename.zoo.cfg.dynamic.parse}.log</log.zoo.cfg.dynamic.parse>
+
+    <file.zk.config.dat>/usr/etc/${filename.zk.config}.dat</file.zk.config.dat>
+    <file.zk.config.sh>${dir.zk.mfdd.conf}/${filename.zk.config}.sh</file.zk.config.sh>
+    <file.zk.tar.gz>${dir.target.dependency}/${filename.zk.tar.gz}</file.zk.tar.gz>
+    <file.zk.purge>${dir.zk.mfdd.conf}/zkPurge.conf</file.zk.purge>
+    <file.zk.purge.template>${file.zk.purge}.${ext.template}</file.zk.purge.template>
+    <file.zoo.cfg.template>${dir.zk.mfdd.conf}/${filename.zoo.cfg.template}</file.zoo.cfg.template>
+    <file.zoo.cfg>${dir.zk.conf}/${filename.zoo.cfg}</file.zoo.cfg>
+    <file.zoo.cfg.dynamic>${dir.zk.conf}/${filename.zoo.cfg.dynamic}</file.zoo.cfg.dynamic>
+    <file.src.zookeeper-env>${dir.filtered.bin}/${filename.zookeeper-env}</file.src.zookeeper-env>
+    <file.zk.mfdd.lib>${dir.zk.mfdd.bin}/zk-mfdd-lib.sh</file.zk.mfdd.lib>
+    <file.zookeeper.conf>${dir.mfdd.conf.d}/zookeeper.conf</file.zookeeper.conf>
+    <file.zookeeper-env>${dir.zk.mfdd.bin}/${filename.zookeeper-env}</file.zookeeper-env>
+    <file.zookeeper.service.template>${dir.zk.mfdd.conf}/${filename.zookeeper.service}.${ext.template}</file.zookeeper.service.template>
+    <file.zookeeper.service.systemd>${dir.systemd.system}/${filename.zookeeper.service}</file.zookeeper.service.systemd>
+
+    <cmd.chkconfig>chkconfig</cmd.chkconfig>
+    <cmd.systemctl>systemctl</cmd.systemctl>
+    <cmd.source.zk.mfdd.lib>source ${file.zk.mfdd.lib}</cmd.source.zk.mfdd.lib>
+    <cmd.zookeeper>${dir.zk.mfdd.bin}/${name.zookeeper}</cmd.zookeeper>
+    <cmd.flw>${dir.zk.mfdd.bin}/${filename.zk-flw}</cmd.flw>
+    <cmd.purge.txn.log>${dir.zk.mfdd.bin}/zk-purge-txn-log.sh</cmd.purge.txn.log>
+    <cmd.zkCli>${dir.zk.bin}/zkCli.sh</cmd.zkCli>
+    <cmd.zkCli.quit>quit</cmd.zkCli.quit>
+    <cmd.zkServer-initialize>${dir.zk.bin}/zkServer-initialize.sh</cmd.zkServer-initialize>
+    <cmd.zk.enable.sysvinit>${cmd.chkconfig} ${name.zookeeper} on</cmd.zk.enable.sysvinit>
+    <cmd.zk.disable.sysvinit>${cmd.chkconfig} ${name.zookeeper} off</cmd.zk.disable.sysvinit>
+    <cmd.zk._start.sysvinit>${cmd.zookeeper} _start</cmd.zk._start.sysvinit>
+    <cmd.zk._stop.sysvinit>${cmd.zookeeper} _stop</cmd.zk._stop.sysvinit>
+    <cmd.zk._restart.sysvinit>${cmd.zookeeper} _restart</cmd.zk._restart.sysvinit>
+    <cmd.zk.start.sysvinit>${cmd.zookeeper} start</cmd.zk.start.sysvinit>
+    <cmd.zk.stop.sysvinit>${cmd.zookeeper} stop</cmd.zk.stop.sysvinit>
+    <cmd.zk.status.sysvinit>${cmd.zookeeper} status</cmd.zk.status.sysvinit>
+    <cmd.zk.restart.sysvinit>${cmd.zookeeper} restart</cmd.zk.restart.sysvinit>
+    <cmd.zk.enable.systemd>${cmd.systemctl} enable ${name.zookeeper}</cmd.zk.enable.systemd>
+    <cmd.zk.disable.systemd>${cmd.systemctl} disable ${name.zookeeper}</cmd.zk.disable.systemd>
+    <cmd.zk.start.systemd>${cmd.systemctl} start ${name.zookeeper}</cmd.zk.start.systemd>
+    <cmd.zk.stop.systemd>${cmd.systemctl} stop ${name.zookeeper}</cmd.zk.stop.systemd>
+    <cmd.zk.status.systemd>${cmd.systemctl} status ${name.zookeeper}</cmd.zk.status.systemd>
+    <cmd.zk.restart.systemd>${cmd.systemctl} restart ${name.zookeeper}</cmd.zk.restart.systemd>
+    <cmd.tunnels.create>${dir.tunnels.bin}/create-tunnels.py</cmd.tunnels.create>
+    <cmd.tunnels.tool>${dir.tunnels.bin}/tunnels-tool.sh</cmd.tunnels.tool>
+    <cmd.tunnels.enable.sysvinit>${cmd.chkconfig} ${name.tunnels} on</cmd.tunnels.enable.sysvinit>
+    <cmd.tunnels.disable.sysvinit>${cmd.chkconfig} ${name.tunnels} off</cmd.tunnels.disable.sysvinit>
+    <cmd.tunnels.start.sysvinit>${cmd.tunnels.tool} start</cmd.tunnels.start.sysvinit>
+    <cmd.tunnels.stop.sysvinit>${cmd.tunnels.tool} stop</cmd.tunnels.stop.sysvinit>
+    <cmd.tunnels.status.sysvinit>${cmd.tunnels.tool} status</cmd.tunnels.status.sysvinit>
+    <cmd.zoo.cfg.dynamic.parse>${dir.zk.mfdd.bin}/${filename.zoo.cfg.dynamic.parse}.sh</cmd.zoo.cfg.dynamic.parse>
+    <cmd.export.oam.zk.client.opts>export OAM_ZK_CLIENT_OPTS=-Dzookeeper.clientCnxnSocket=com.jupiter.mfdd.security.zk.ClientCnxnSocketNettyMfdd</cmd.export.oam.zk.client.opts>
+
+    <rpm.scriptlet.shebang>#!/bin/bash</rpm.scriptlet.shebang>
+    <rpm.scriptlet.debug>#set -x</rpm.scriptlet.debug>
+    <rpm.scriptlet.prepare>${dir.filtered.bin.rpm}/prepareScriptlet.sh</rpm.scriptlet.prepare>
+    <rpm.scriptlet.preinstall>${dir.filtered.bin.rpm}/preinstallScriptlet.sh</rpm.scriptlet.preinstall>
+    <rpm.scriptlet.install>${dir.filtered.bin.rpm}/installScriptlet.sh</rpm.scriptlet.install>
+    <rpm.scriptlet.postinstall>${dir.filtered.bin.rpm}/postinstallScriptlet.sh</rpm.scriptlet.postinstall>
+    <rpm.scriptlet.preremove>${dir.filtered.bin.rpm}/preremoveScriptlet.sh</rpm.scriptlet.preremove>
+    <rpm.scriptlet.postremove>${dir.filtered.bin.rpm}/postremoveScriptlet.sh</rpm.scriptlet.postremove>
+    <rpm.scriptlet.verify>${dir.filtered.bin.rpm}/verifyScriptlet.sh</rpm.scriptlet.verify>
+    <rpm.scriptlet.clean>${dir.filtered.bin.rpm}/cleanScriptlet.sh</rpm.scriptlet.clean>
+    <rpm.scriptlet.pretrans>${dir.filtered.bin.rpm}/pretransScriptlet.sh</rpm.scriptlet.pretrans>
+    <rpm.scriptlet.posttrans>${dir.filtered.bin.rpm}/posttransScriptlet.sh</rpm.scriptlet.posttrans>
+    <rpm.scriptlet.cmd.log>log="${dir.var.log}/${name.zookeeper}.$cmdShort.${ext.log}"</rpm.scriptlet.cmd.log>
+    <rpm.scriptlet.cmd.runtime>cmdRuntime="$(basename $0)"</rpm.scriptlet.cmd.runtime>
+    <rpm.scriptlet.cmd.short>cmdShort="$(echo $cmd | cut -d'.' -f1)"</rpm.scriptlet.cmd.short>
+    <rpm.scriptlet.cmd.upgrade>cmdShort="$cmdShort upgrade"</rpm.scriptlet.cmd.upgrade>
+    <rpm.scriptlet.cmd.prepare>cmd="$(basename ${rpm.scriptlet.prepare})"</rpm.scriptlet.cmd.prepare>
+    <rpm.scriptlet.cmd.preinstall>cmd="$(basename ${rpm.scriptlet.preinstall})"</rpm.scriptlet.cmd.preinstall>
+    <rpm.scriptlet.cmd.install>cmd="$(basename ${rpm.scriptlet.install})"</rpm.scriptlet.cmd.install>
+    <rpm.scriptlet.cmd.postinstall>cmd="$(basename ${rpm.scriptlet.postinstall})"</rpm.scriptlet.cmd.postinstall>
+    <rpm.scriptlet.cmd.preremove>cmd="$(basename ${rpm.scriptlet.preremove})"</rpm.scriptlet.cmd.preremove>
+    <rpm.scriptlet.cmd.postremove>cmd="$(basename ${rpm.scriptlet.postremove})"</rpm.scriptlet.cmd.postremove>
+    <rpm.scriptlet.cmd.verify>cmd="$(basename ${rpm.scriptlet.verify})"</rpm.scriptlet.cmd.verify>
+    <rpm.scriptlet.cmd.clean>cmd="$(basename ${rpm.scriptlet.clean})"</rpm.scriptlet.cmd.clean>
+    <rpm.scriptlet.cmd.pretrans>cmd="$(basename ${rpm.scriptlet.pretrans})"</rpm.scriptlet.cmd.pretrans>
+    <rpm.scriptlet.cmd.posttrans>cmd="$(basename ${rpm.scriptlet.posttrans})"</rpm.scriptlet.cmd.posttrans>
+    <rpm.scriptlet.check.num.args>if [ $# -ne 1 ]; then displayUsage; fi</rpm.scriptlet.check.num.args>
+    <rpm.scriptlet.echo.started>echo "==================== ${rpm.description} for MFDD ${project.version} $cmdShort started."</rpm.scriptlet.echo.started>
+    <rpm.scriptlet.echo.completed>echo "==================== ${rpm.description} for MFDD ${project.version} $cmdShort completed."</rpm.scriptlet.echo.completed>
+    <rpm.scriptlet.exit>exit ${rc.success}</rpm.scriptlet.exit>
+  </properties>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.0.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>1.6.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>rpm-maven-plugin</artifactId>
+          <version>2.1.5</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <modules>
+    <module>zookeeper_svr</module>
+  </modules>
+</project>

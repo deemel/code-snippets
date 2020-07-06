@@ -1,0 +1,1 @@
+Enhance ZooKeeper 3.5.1-alpha to support use of TLS v1.2 in addition to TLS v1 for communications between ZooKeeper clients and servers.  A better approach would be to generalize such support to be configurable by the user (e.g., configuration file, system property).  Written in Java.

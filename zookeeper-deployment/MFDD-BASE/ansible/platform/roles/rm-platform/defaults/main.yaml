@@ -1,0 +1,1 @@
+ecim_servers: "{{ vars['ovfProperties']['com.jupiter.mfdd.base.zookeeper_ip'].split(',') }}"

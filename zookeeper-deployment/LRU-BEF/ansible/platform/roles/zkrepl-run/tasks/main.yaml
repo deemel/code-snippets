@@ -1,0 +1,22 @@
+---
+- name: Set georedzkutil command
+  set_fact:
+    georedzkutil: "/opt/georedzkutil/bin/georedzkutil --site={{ site_id }} --zk-repl-file=/etc/opt/mfdd/conf/zk/zkReplicationAgent.conf"
+
+- debug: var=groups
+- debug: var=site_id
+- debug: var=georedzkutil
+
+- name: Create zkReplicationAgent.conf
+  command: "{{ georedzkutil }}"
+  when:
+    - site_id is defined
+
+- name: Restart zkrepl
+  systemd:
+    daemon_reload: yes
+    name: "{{ item }}"
+    enabled: yes
+    state: restarted
+  with_items:
+    - "zkrepl"

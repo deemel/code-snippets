@@ -1,0 +1,5 @@
+ecim_certificates:
+  - { servicegroup: "lru-bef-zk", servicegrouptype: "client", user: "root" }
+  - { servicegroup: "lru-bef-zk", servicegrouptype: "server", user: "zookeeper" }
+ecim_port: 2281
+nsmserver: 127.0.0.1

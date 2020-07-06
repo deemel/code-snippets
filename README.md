@@ -1,2 +1,25 @@
 # code-snippets
 Collection of some code I have written.
+- access-management-sdk (Java, Shell): Access management SDK with APIs for authentication and authorization services.
+- bigint (C++, Makefile): An implementation of arbitrary length integers, supporting various arithmetic and comparitive operators.
+- certificate-authority-tool (Shell): OpenSSL tools for creating certificates.
+- diameter-session-manager (C, Makefile): Diameter Credit-Control Application session manager, running as part of the Diameter protocol stack in an embedded Linux RTOS.
+- docker-elasticsearch (Dockerfile, Maven POM, Shell): Custom Docker image for Elasticsearch.
+- docker-filebeat (Dockerfile, Maven POM): Custom Docker image for Filebeat.
+- docker-image-reduction (Shell): Some tools for reducing Docker image size during build time.
+- docker-logstash (Dockerfile, Maven POM, Shell): Custom Docker image for Logstash.
+- docker-rhel-atomic (Dockerfile, Maven POM): Base Docker image consisting of RHEL Atomic and common directory structure and software that subsequent Docker images are built from.
+- filebeat-to-elasticsearch (Shell): Demonstration of forwarding logs from Filebeat directly to Elasticsearch, bypassing Logstash.
+- filebeat-wrapper (Go): Generates YAML configuration file for Filebeat based on user-provided configuration, and then starts Filebeat.
+- format-date (PHP): Consulting assignment to debug and rewrite a web application's format date function given different display modes.
+- log-web-app (Java, Shell): A logging service web application with REST endpoints to forward JSON-formatted events to Logstash and to obtain health status of Logstash.
+- proxy-transmission (C, VBA): Load EBCDIC-encoded proxy transmission data into Excel and Access.
+- se-linux-config (Shell): Compile and install SELinux local policy, containing domain auto transition rule for sshd.
+- service-management-agent (Java, Shell): Service management agent built with Consul service discovery APIs (e.g., register, deregister, discover).
+- slab-allocator-memory-cache (C): Memory management library for Diameter protocol stack.
+- sshd-config (Python, Shell): Automate setting SSH- and SFTP-related configuration in /etc/ssh/sshd_config.
+- zookeeper-deployment (Ansible, Python, Shell): Orchestrate deployment of ZooKeeper servers with data replication.
+- zookeeper-dynamic (Maven POM, Python, Shell): A self-configurable ZooKeeper RPM that can dynamically reconfigure itself during runtime as ZooKeeper servers are added to or removed from the ensemble.
+- zookeeper-replication (Mustache, Shell): Scripts for generating configuration files for ZooKeeper data replication.
+- zookeeper-security (Java): This enhancement aims to make more secure key store and trust store credentials by not exposing them at ZooKeeper server/client startups and by storing them in predefined, permission-controlled, obfuscated files.
+- zookeeper-tls-v1.2 (Java, Shell): Enhance ZooKeeper 3.5.1-alpha to support use of TLS v1.2 in addition to TLS v1 for communications between ZooKeeper clients and servers.

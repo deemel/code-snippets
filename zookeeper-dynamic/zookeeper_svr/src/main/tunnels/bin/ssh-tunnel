@@ -1,0 +1,112 @@
+#!/bin/bash
+
+name=`basename ${0}`
+
+if [ $# == 4 ]
+then
+    command=$1
+    localport=$2
+    remotehost=$3
+    remoteport=$4
+else
+    localport=`echo $name | cut -d. -f2`
+    remotehost=`echo $name | cut -d. -f3`
+    remoteport=`echo $name | cut -d. -f4`
+fi
+
+LOGFILE=${dir.tunnels.log}/$name.log
+TUNUSER=tunnel
+
+function getpid 
+{
+	pid=`ps -C ssh -o pid,cmd= | egrep -e "-f.*${TUNUSER}@${remotehost}.*-L.*${localport}:localhost:${remoteport}.*-N" |awk '{print $1}'`
+	echo $pid
+	return 0
+}
+
+function status {
+    pid=`getpid`
+    #echo "status for $name got pid ${pid}" >> ${LOGFILE}
+    if [ "$pid" == "" ]
+    then
+		return 1
+    fi
+    return 0
+}
+
+function stop() {
+
+    pid=`getpid`
+    if [ "$pid" == "" ]
+    then
+        echo "$name is not running."
+        return 1
+    else
+        su -s /bin/bash -c "kill $pid" root
+        for x in {1..10}; do
+            status
+            if [ $? -ne 0 ]; then
+                break
+            fi
+            sleep 1
+        done
+
+        status
+        if [ $? -eq 0 ]; then
+            echo "Failed"
+            exit 1
+        else
+            echo "OK"
+            exit 0
+        fi
+    fi
+}
+
+function start() {
+
+    status
+    if [ $? -eq 0 ]; then
+        echo "$name is already running."
+        exit 0
+    fi
+
+    echo -n "Starting $name: "
+    su -s /bin/bash -c "/usr/bin/ssh -o ServerAliveInterval=60 -f ${TUNUSER}@${remotehost} -L ${localport}:localhost:${remoteport} -N" ${TUNUSER} >> $LOGFILE 2>&1
+
+    echo "OK"
+
+    sleep 1
+    status
+
+    if [ $? -ne 0 ]; then
+        echo "$name failed to start. please check the logs."
+        exit 1
+    fi
+
+    exit 0
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status
+
+        RET=$?
+        if [ $RET -eq 0 ]; then
+            echo "$name is running..."
+        else
+            echo "$name is stopped."
+        fi
+        exit $RET
+        ;;
+    *)
+        echo "Usage: `basename $0` [start|stop|status]"
+        exit 1
+esac
+
+exit 0

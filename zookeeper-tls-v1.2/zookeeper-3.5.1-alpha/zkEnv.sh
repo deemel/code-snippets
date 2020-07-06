@@ -1,0 +1,1 @@
+export CLIENT_JVMFLAGS="-Xmx${ZK_CLIENT_HEAP}m -Dhttps.protocols=TLSv1.2 $CLIENT_JVMFLAGS"

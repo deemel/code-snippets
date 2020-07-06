@@ -1,0 +1,1 @@
+	PROP_ZK_CLIENT_CNXN_SOCKET="-Dzookeeper.clientCnxnSocket=com.jupiter.mfdd.security.zk.ClientCnxnSocketNettyMfdd -Dhttps.protocols=TLSv1.2"

@@ -1,0 +1,135 @@
+---
+- name: Create zookeeper yum repo
+  yum_repository:
+    name: "zookeeper"
+    description: "Zookeeper Software"
+    baseurl: "file://{{ DV_REPO_DIR }}"
+    gpgcheck: no
+
+- name: Install zookeeper  packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "zookeeper_svr"
+    - "mfdd-base"
+    - "mfdd-geored-zk-util"
+
+- name: Remove zookeeper yum repo
+  yum_repository:
+    name: "zookeeper"
+    state: absent
+
+- name: Check siteid cfg file
+  stat:
+    path: /cvar/var/oam/zookeeper/myid
+  register: zk_myid_stat
+
+#- debug: var=zk_myid_stat
+
+- name: set zk_servers
+  set_fact:
+    zk_servers: "{% if LRURTE_POSTDEPLOY == 'False' and zk_myid_stat.stat.exists == True %}{{ lrurte_server }},{{ lrubef_servers }}{% elif LRURTE_POSTDEPLOY == 'False' %}{{ lrubef_servers }}{% else %}{{ lrurte_server }}{% endif %}"
+
+#- debug: var=zk_servers
+
+# If this upgrade from LRU-RTE with zookeeper or new deploy, set zookeeperConfiguration.dat
+- name: Setup zookeeperConfiguration.dat
+  template:
+    src: "zookeeper_config.dat.j2"
+    dest: "/usr/etc/zookeeperConfiguration.dat"
+    mode: 0644
+
+- name: Define ecim_servers
+  set_fact:
+    ecim_servers: "{{ zk_servers.split(',') }}"
+
+#- debug: var=ecim_servers
+
+- name: Setup zookeeper.conf
+  template:
+    src: "zookeeper.conf.j2"
+    dest: "/opt/mfdd/latest/base/conf.d/zookeeper.conf"
+    mode: 0644
+
+-  file:
+     path: /opt/mfdd/tmp/SSH_DST
+     state: directory
+
+-  copy:
+    src: /repository/zk_ssh_certs/cluster1/certs/ssh/CA.tar
+    dest: /opt/mfdd/tmp/SSH_DST
+
+- name: ZK tunnels setup
+  shell: /opt/zookeeper/mfdd/tunnels/certs/setup_zk_tunnel_keys.sh >> /var/opt/lru/logs/ms.log 2>&1
+
+- name: Create zookeeper server and client certificates.
+  file:
+    path: /home/zookeeper
+    state: directory
+    owner: zookeeper
+    group: zookeeper
+    mode: 0700
+
+#- file:
+#    path: /etc/opt/mfdd/.zookeeper/zk
+#    path: /home/zookeeper
+#    state: directory
+#    owner: zookeeper
+#    group: zookeeper
+#    mode: 0700
+
+#- shell: runuser --login --fast --shell=/bin/bash  root --command "/opt/lru/bin/lru_create_nsm_certs.sh -u zookeeper -i lru-bef-zk -t server"
+
+#- shell: runuser --login --fast --shell=/bin/bash  root --command "/opt/lru/bin/lru_create_nsm_certs.sh -u root -i lru-bef-zk -t client"
+
+- name: Configure NSM Server mappings for ECIM certificate
+  nsmconfig:
+    state: "present"
+    instancetype: "{{ DV_NAME }}"
+    interface: "{{ item.servicegroup }}"
+    user: "{{ item.user }}"
+  run_once: true
+  with_items: "{{ ecim_certificates }}"
+  delegate_to: "{{ nsmserver }}"
+
+- name: Request ECIM certificate
+  nsmclient:
+    initiate: true
+    servicegroup: "{{ item.servicegroup }}"
+    servicegrouptype: "{{ item.servicegrouptype }}"
+  become_user: "{{ item.user }}"
+  environment:
+    HOSTNAME: "{{ inventory_hostname }}"
+  with_items: "{{ ecim_certificates }}"
+
+#- name: Create softlink /etc/opt/mfdd/.zookeeper/zk
+#  file:
+#    src: /home/zookeeper/.ssl/lru-bef-zk/client
+#    dest: /etc/opt/mfdd/.zookeeper/zk
+#    state: link
+
+- name: Run MFDD script to configure zookeeper
+  shell: /opt/zookeeper/mfdd/bin/rpm/postinstallScriptlet.sh 1 >> /var/opt/lru/logs/ms.log 2>&1
+  when: "LRURTE_POSTDEPLOY == 'True' and zk_myid_stat.stat.exists == False"
+
+- name: Define georedzkutil's state_flag
+  set_fact:
+    state_flag: "{% if LRURTE_POSTDEPLOY == 'True' %}install{% else %}upgrade{% endif %}"
+
+- debug: var=LRURTE_POSTDEPLOY
+- debug: var=site_id
+- debug: var=zk_servers
+- debug: var=state_flag
+
+- name: Create initial zk-site.json
+  command: /opt/georedzkutil/bin/georedzkutil --site={{ site_id }} --use-zk-hosts={{ zk_servers }} --set-state-flag={{ state_flag }} --zk-site-file=/etc/opt/mfdd/cfg/zk-site.json
+  when: site_id is defined
+
+- name: Start cron job to keep zk-site.json up-to-date
+  cron:
+    name: "update zk-site.json"
+    user: "root"
+    state: present
+    minute: "*/1"
+    job: "timeout 1m /opt/georedzkutil/bin/check-zk-site > /dev/null 2>&1"

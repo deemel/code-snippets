@@ -1,0 +1,51 @@
+# The number of milliseconds of each tick.
+tickTime=2000
+
+# The number of ticks that the initial synchronization phase can take.
+initLimit=10
+
+# The number of ticks that can pass between sending a request and
+# getting an acknowledgement.
+syncLimit=5
+
+# The directory where the snapshot is stored.
+dataDir=MFDD_dataDir
+
+# The port at which the clients will connect.
+clientPort=MFDD_clientPort
+
+# The maximum number of client connections. Increase this if you need
+# to handle more clients.
+maxClientCnxns=0
+
+# Be sure to read the maintenance section of the administrator guide
+# before turning on autopurge.
+#
+# http://zookeeper.apache.org/doc/current/zookeeperAdmin.html#sc_maintenance
+#
+# The number of snapshots to retain in dataDir.
+autopurge.snapRetainCount=5
+
+# Purge task interval in hours. Set to "0" to disable auto purge
+# feature.
+autopurge.purgeInterval=4
+
+# The number of ms before a session will be timed out (and ephemeral
+# nodes cleaned up).
+maxSessionTimeout=90000
+
+# With this setting it is possible to start a ZooKeeper ensemble
+# containing a single participant and to dynamically grow it by
+# adding more servers. Similarly, it is possible to shrink an ensemble
+# so that just a single participant remains, by removing servers.
+# Since running the Distributed mode allows more flexibility, we
+# recommend setting the flag to false.
+standaloneEnabled=false
+
+# Dynamic configuration parameters are stored in a separate file on
+# the server (which we call the dynamic configuration file). This file
+# is linked from the static config file using the new
+# dynamicConfigFile keyword.
+dynamicConfigFile=MFDD_dynamicConfigFile
+
+4lw.commands.whitelist=*

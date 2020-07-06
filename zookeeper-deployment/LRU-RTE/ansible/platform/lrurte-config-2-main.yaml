@@ -1,0 +1,9 @@
+---
+- hosts: target
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  roles:
+    - { role: setup-zookeeper-ports }
+    - { role: configure-zookeeper }
+    - { role: install-lru-addon }

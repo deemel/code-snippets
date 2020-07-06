@@ -1,0 +1,6 @@
+export MFDD_DIR_CRED=~/.ssl/lru-bef-zk/client
+export OAM_ZK_CLIENT_OPTS=-Dzookeeper.clientCnxnSocket=com.jupiter.mfdd.security.zk.ClientCnxnSocketNettyMfdd
+export MFDD_ZK_CONNECT=
+{%- for ecim_server in ecim_servers %}
+{{ ecim_server }}:{{ ecim_port }},
+{%- endfor %}

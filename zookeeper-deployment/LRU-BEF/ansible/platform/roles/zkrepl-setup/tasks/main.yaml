@@ -1,0 +1,17 @@
+---
+- name: Install ZK Replication packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "mfdd-zkrepl"
+    - "mfdd-geored-zk-util"
+
+- name: Start zk-site-updater
+  systemd:
+    daemon_reload: yes
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+    - "zk-site-updater"

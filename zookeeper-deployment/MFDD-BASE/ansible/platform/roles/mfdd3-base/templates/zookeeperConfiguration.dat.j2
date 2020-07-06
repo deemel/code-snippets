@@ -1,0 +1,5 @@
+ZK_PORT_SECURE={{ ecim_port }}
+ZK_SERVERS=
+{%- for ecim_server in ecim_servers %}
+{{ ecim_server }}:{{ ecim_port }},
+{%- endfor %}

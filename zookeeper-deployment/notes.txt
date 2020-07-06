@@ -1,0 +1,33 @@
+MFDD-BASE
+======================================================================
+./MFDD-BASE/ansible/platform/main.yaml, roles: role: rm-platform
+./MFDD-BASE/ansible/platform/roles/rm-platform/meta/main.yaml, dependencies: role: mfdd3-oamnc
+./MFDD-BASE/ansible/platform/roles/mfdd3-oamnc/meta/main.yaml, dependencies: role: mfdd3-base
+./MFDD-BASE/ansible/platform/roles/mfdd3-base/tasks/main.yaml
+
+LRU-RTE
+======================================================================
+./LRU-RTE/scripts/lib/lru_platform_deploy_config.sh, 015_RunRteConfig_02.py
+./LRU-RTE/scripts/postdeploy/015_RunRteConfig_02.py, lrurte-config-2-main.yaml
+./LRU-RTE/ansible/platform/lrurte-config-2-main.yaml, roles: role: install-lru-addon
+./LRU-RTE/ansible/platform/roles/install-lru-addon/tasks/install-lru-addon
+
+./LRU-RTE/scripts/postdeploy/lru_platform_deploy_config.sh, 030_RunRteConfig_03.py
+./LRU-RTE/scripts/postdeploy/030_RunRteConfig_03.py, lrurte-config-3-main.yaml
+./LRU-RTE/ansible/platform/lrurte-config-3-main.yaml: roles: role: configure-lrurte
+./LRU-RTE/ansible/platform/roles/configure-lrurte/tasks, include_role: name: zkrepl-setup
+./LRU-RTE/ansible/platform/roles/zkrepl-setup/tasks/main.yaml
+
+LRU-BEF
+======================================================================
+run ./LRU-BEF/scripts/postdeploy/*
+
+./LRU-BEF/scripts/postdeploy/81_RunBefConfig.py, lrubef-config-1-main.yaml
+./LRU-BEF/ansible/platform/lrubef-config-1-main.yaml, roles: role: zkrepl-setup
+./LRU-BEF/ansible/platform/roles/zkrepl-setup/tasks/main.yaml
+
+./LRU-BEF/scripts/postdeploy/93_zkrepl-run.sh, zkrepl-run.sh
+./LRU-BEF/scripts/lib/zkrepl-run.sh, zkrepl-run.py
+./LRU-BEF/scripts/zkrepl-run/zkrepl-run.py, zkrepl-run-main.yaml
+./LRU-BEF/ansible/platform/zkrepl-run-main.yaml, roles: role: zkrepl-run
+./LRU-BEF/ansible/platform/roles/zkrepl-run/tasks/main.yaml

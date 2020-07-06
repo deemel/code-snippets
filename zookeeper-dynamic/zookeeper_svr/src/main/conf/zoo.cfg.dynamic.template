@@ -1,0 +1,1 @@
+server.MFDD_myid=MFDD_address:MFDD_portPeer:MFDD_portLeader:MFDD_role;MFDD_clientPortAddress:MFDD_clientPort

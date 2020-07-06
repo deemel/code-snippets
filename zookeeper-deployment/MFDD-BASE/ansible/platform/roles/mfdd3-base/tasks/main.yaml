@@ -1,0 +1,31 @@
+---
+- name: Install MFDD base
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "mfdd-base"
+    - "mfdd-base-libs"
+    - "mfdd-oam-utils"
+    - "mfdd-geored-zk-util"
+
+- name: Configure ECIM server connection
+  template:
+    dest: "/opt/mfdd/latest/base/conf.d/zookeeper.conf"
+    src: "zookeeper.conf.j2"
+    mode: 0644
+
+- name: Create zookeeperConfiguration.dat
+  template:
+    dest: "/usr/etc/zookeeperConfiguration.dat"
+    src: "zookeeperConfiguration.dat.j2"
+    mode: 0644
+
+- name: Start zk-site-updater
+  systemd:
+    daemon_reload: yes
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+    - "zk-site-updater"
