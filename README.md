@@ -1,5 +1,5 @@
 # code-snippets
-Collection of some code I have written in languages such as C, C++, Go, Java, Shell.
+Collection of code I have written in languages such as C, C++, Go, Java, Shell.
 - access-management-sdk (Java, Shell): Access management SDK with APIs for authentication and authorization services.
 - bigint (C++, Makefile): An implementation of arbitrary length integers, supporting various arithmetic and comparitive operators.
 - certificate-authority-tool (Shell): OpenSSL tools for creating certificates.
