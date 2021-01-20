@@ -17,6 +17,7 @@ Collection of code I have written in languages such as C, C++, Go, Java, Shell.
 - se-linux-config (Shell): Compile and install SELinux local policy, containing domain auto transition rule for sshd.
 - service-management-agent (Java, Shell): Service management agent built with Consul service discovery APIs (e.g., register, deregister, discover).
 - slab-allocator-memory-cache (C): Memory management library for Diameter protocol stack.
+- spring-boot-demo (Java): Tomcat demo application for an in-memory database with RESTful web services for CRUD operations.
 - sshd-config (Python, Shell): Automate setting SSH- and SFTP-related configuration in /etc/ssh/sshd_config.
 - zookeeper-deployment (Ansible, Python, Shell): Orchestrate deployment of ZooKeeper servers with data replication.
 - zookeeper-dynamic (Maven POM, Python, Shell): A self-configurable ZooKeeper RPM that can dynamically reconfigure itself during runtime as ZooKeeper servers are added to or removed from the ensemble.
