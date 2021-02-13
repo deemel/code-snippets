@@ -3,6 +3,9 @@ Collection of code I have written in languages such as C, C++, Go, Java, Shell.
 - access-management-sdk (Java, Shell): Access management SDK with APIs for authentication and authorization services.
 - bigint (C++, Makefile): An implementation of arbitrary length integers, supporting various arithmetic and comparitive operators.
 - certificate-authority-tool (Shell): OpenSSL tools for creating certificates.
+- demo-spring-boot (Java): Tomcat demo application for an in-memory database with RESTful web services for CRUD operations.
+- demo-database-crud (Java): Tomcat demo application for an in-memory and a graph database with RESTful web services for CRUD operations.
+- demo-sftp (Java): Demo application for getting and putting files via SFTP.
 - diameter-session-manager (C, Makefile): Diameter Credit-Control Application session manager, running as part of the Diameter protocol stack in an embedded Linux RTOS.
 - docker-elasticsearch (Dockerfile, Maven POM, Shell): Custom Docker image for Elasticsearch.
 - docker-filebeat (Dockerfile, Maven POM): Custom Docker image for Filebeat.
@@ -17,7 +20,6 @@ Collection of code I have written in languages such as C, C++, Go, Java, Shell.
 - se-linux-config (Shell): Compile and install SELinux local policy, containing domain auto transition rule for sshd.
 - service-management-agent (Java, Shell): Service management agent built with Consul service discovery APIs (e.g., register, deregister, discover).
 - slab-allocator-memory-cache (C): Memory management library for Diameter protocol stack.
-- spring-boot-demo (Java): Tomcat demo application for an in-memory database with RESTful web services for CRUD operations.
 - sshd-config (Python, Shell): Automate setting SSH- and SFTP-related configuration in /etc/ssh/sshd_config.
 - zookeeper-deployment (Ansible, Python, Shell): Orchestrate deployment of ZooKeeper servers with data replication.
 - zookeeper-dynamic (Maven POM, Python, Shell): A self-configurable ZooKeeper RPM that can dynamically reconfigure itself during runtime as ZooKeeper servers are added to or removed from the ensemble.
