@@ -1,5 +1,4 @@
-Tool to automate the exporting of MS Access tables and data into PostgreSQL.  Access table schemas are used to create equivalent PostgreSQL table schemas.  2 new columns (date_created, date
-_modified) are added to PostgreSQL tables for change tracking purposes.
+Tool to automate exporting of MS Access tables and data into PostgreSQL.  Access table schemas are used to create equivalent PostgreSQL table schemas.  2 new columns (date_created, date_modified) are added to PostgreSQL tables for change tracking purposes.
 
 Current data type conversions are as follow.
 
